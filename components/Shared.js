@@ -70,23 +70,28 @@ export function FormGroup({ label, emoji, children, style }) {
 // ── Text input styled like .form-input ──
 export function FormInput(props) {
   return (
-    <TextInput
-      style={[styles.formInput, props.style]}
-      placeholderTextColor={colors.textMuted}
-      {...props}
-    />
+    <View style={[styles.inputBox, props.style]}>
+      <TextInput
+        style={styles.inputInner}
+        placeholderTextColor={colors.textMuted}
+        {...props}
+        placeholder={props.placeholder}
+      />
+    </View>
   );
 }
 
 // ── Textarea styled like .form-textarea ──
 export function FormTextarea(props) {
   return (
-    <TextInput
-      style={[styles.formInput, styles.formTextarea, props.style]}
-      placeholderTextColor={colors.textMuted}
-      multiline
-      {...props}
-    />
+    <View style={[styles.inputBox, styles.textareaBox, props.style]}>
+      <TextInput
+        style={[styles.inputInner, styles.textareaInner]}
+        placeholderTextColor={colors.textMuted}
+        multiline
+        {...props}
+      />
+    </View>
   );
 }
 
@@ -225,19 +230,29 @@ const styles = StyleSheet.create({
   formLabel: { fontSize: 13, fontWeight: '600', color: colors.text },
   emoji: { fontSize: 14 },
 
-  formInput: {
+  inputBox: {
     width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 13,
     paddingHorizontal: 16,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 12,
+    backgroundColor: colors.white,
+  },
+  textareaBox: { height: 90, alignItems: 'flex-start' },
+  inputInner: {
+    flex: 1,
     fontSize: 14,
     color: colors.text,
-    backgroundColor: colors.white,
+    padding: 0,
+    margin: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
-  formTextarea: { height: 90, textAlignVertical: 'top' },
+  textareaInner: { height: '100%', textAlignVertical: 'top' },
 
   selectBox: {
     flexDirection: 'row',
