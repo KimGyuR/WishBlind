@@ -1,0 +1,18 @@
+export const colors = {
+  main: '#6D1F32',
+  mainHover: '#5a1928',
+  bg: '#F8F4EE',
+  accent1: '#EFE7DD',
+  accent2: '#EFE7DE',
+  white: '#ffffff',
+  text: '#1a1a1a',
+  textMuted: '#999999',
+  border: '#e0dcd6',
+  chipHover: '#fdf0f3',
+  green: { bg: '#e8f9ee', text: '#1d8348' },
+  blue: { bg: '#e8f0ff', text: '#1a56db' },
+  yellow: { bg: '#fef9e7', text: '#b7770d' },
+  gray: { bg: '#f0f0f0', text: '#666666' },
+  deliveryActiveBg: '#fdf6f8',
+  modalOverlay: 'rgba(0,0,0,0.45)',
+};

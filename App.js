@@ -1,3 +1,7 @@
+import React, { useState } from 'react';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+
 import Login from './screens/Login';
 import Home from './screens/Home';
 import GiftStep1 from './screens/GiftStep1';
@@ -14,7 +18,8 @@ import TasteComplete from './screens/TasteComplete';
 import AIResults from './screens/AIResults';
 import AIDetail from './screens/AIDetail';
 import GiftDelivery from './screens/GiftDelivery';
-import { useState } from 'react';
+
+import { colors } from './theme';
 
 export default function App() {
   const [page, setPage] = useState('login');
@@ -42,8 +47,14 @@ export default function App() {
   };
 
   return (
-    <div className="phone-frame">
-      {screens[page] ?? screens['login']}
-    </div>
+    <SafeAreaView style={styles.root}>
+      <StatusBar hidden />
+      <View style={styles.container}>{screens[page] ?? screens['login']}</View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  container: { flex: 1, backgroundColor: colors.bg },
+});
