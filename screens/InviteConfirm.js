@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { FakeStatusBar, Header, FormGroup, FormInput, Button } from '../components/Shared';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { FakeStatusBar, Header, Card, PillInput, Button } from '../components/Shared';
 import { colors } from '../theme';
 
 export default function InviteConfirm({ navigate }) {
@@ -9,35 +9,33 @@ export default function InviteConfirm({ navigate }) {
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 22, paddingBottom: 28 }}>
+      <View style={{ flex: 1, paddingHorizontal: 24 }}>
         <Header title="초대 확인" onBack={() => navigate('home')} />
 
         <Text style={styles.desc}>받은 초대 링크나 코드를 입력해 주세요.</Text>
 
-        <FormGroup label="초대 코드 입력">
-          <FormInput
-            value={code}
-            onChangeText={setCode}
-            style={{ letterSpacing: 4, textAlign: 'center' }}
-          />
-        </FormGroup>
+        <Card style={{ marginTop: 8 }}>
+          <Text style={styles.label}>초대 코드 입력</Text>
+          <PillInput value={code} onChangeText={setCode} style={{ marginBottom: 16 }} />
 
-        <View style={[styles.shareBox, { marginBottom: 24 }]}>
-          <TouchableOpacity style={[styles.shareItem, { borderBottomWidth: 0 }]}>
-            <Text style={{ color: colors.text, fontSize: 14, fontWeight: '600' }}>QR 코드 스캔</Text>
-            <Text style={styles.shareArrow}>›</Text>
+          <TouchableOpacity style={styles.qrRow}>
+            <Text style={styles.qrText}>QR 코드 스캔</Text>
+            <Text style={styles.qrArrow}>›</Text>
           </TouchableOpacity>
-        </View>
 
-        <Button title="초대 확인" full onPress={() => navigate('taste-1')} />
-      </ScrollView>
+          <View style={{ alignItems: 'flex-end', marginTop: 16 }}>
+            <Button title="초대 확인" onPress={() => navigate('taste-1')} />
+          </View>
+        </Card>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  desc: { fontSize: 13, color: colors.textMuted, marginBottom: 24, textAlign: 'center' },
-  shareBox: { backgroundColor: colors.white, borderRadius: 16, paddingHorizontal: 16 },
-  shareItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 15 },
-  shareArrow: { color: colors.textMuted, fontSize: 16 },
+  desc: { fontSize: 13, color: colors.stepDesc, textAlign: 'center', marginBottom: 20, lineHeight: 20 },
+  label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 10 },
+  qrRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3 },
+  qrText: { fontSize: 14, color: colors.main, fontWeight: '500' },
+  qrArrow: { fontSize: 14, color: colors.main },
 });
