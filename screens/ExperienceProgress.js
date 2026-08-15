@@ -1,33 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { FakeStatusBar, Button } from '../components/Shared';
 import { colors } from '../theme';
 
 export default function ExperienceProgress({ navigate }) {
-  const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(1);
+  const [selections, setSelections] = useState({
+    product: 'A',
+    texture: 2,
+    size: 'Large',
+    subgan: 'medium',
+    color: 'bright',
+    weight: 'light',
+  });
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev < 100) {
-          if (prev === 33) setCurrentStep(2);
-          if (prev === 66) setCurrentStep(3);
-          return prev + 1;
-        }
-        clearInterval(timer);
-        return prev;
-      });
-    }, 100);
+  const stepIndicators = [
+    { num: 1, active: currentStep >= 1 },
+    { num: 2, active: currentStep >= 2 },
+    { num: 3, active: currentStep >= 3 },
+  ];
 
-    return () => clearInterval(timer);
-  }, []);
+  const handlePrev = () => {
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
 
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
-      navigate('taste-test', { fromExperience: true });
+      navigate('experience-result');
     }
   };
 
@@ -39,97 +40,223 @@ export default function ExperienceProgress({ navigate }) {
           <TouchableOpacity onPress={() => navigate('experience-detail')}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>체험 진행 중</Text>
+          <Text style={styles.title}>
+            {currentStep === 1 && '체험 진행 화면'}
+            {currentStep === 2 && '취향 정보 입력'}
+            {currentStep === 3 && '취향 정보 입력'}
+          </Text>
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress}%` }]} />
-          </View>
-          <Text style={styles.progressText}>{Math.round(progress)}%</Text>
+        {/* Step indicators */}
+        <View style={styles.stepIndicator}>
+          {stepIndicators.map((step, idx) => (
+            <View key={step.num} style={styles.stepRow}>
+              <View style={[styles.stepDot, step.active && styles.stepDotActive]}>
+                <Text style={[styles.stepNum, step.active && styles.stepNumActive]}>
+                  {step.num}
+                </Text>
+              </View>
+              {idx < 2 && <View style={[styles.stepLine, step.active && styles.stepLineActive]} />}
+            </View>
+          ))}
         </View>
 
-        <View style={styles.stepContainer}>
-          <View style={styles.stepIndicator}>
-            <View style={[styles.stepDot, currentStep >= 1 && styles.stepDotActive]}>
-              <Text style={styles.stepNumber}>1</Text>
-            </View>
-            <View style={[styles.stepLine, currentStep >= 2 && styles.stepLineActive]} />
-            <View style={[styles.stepDot, currentStep >= 2 && styles.stepDotActive]}>
-              <Text style={styles.stepNumber}>2</Text>
-            </View>
-            <View style={[styles.stepLine, currentStep >= 3 && styles.stepLineActive]} />
-            <View style={[styles.stepDot, currentStep >= 3 && styles.stepDotActive]}>
-              <Text style={styles.stepNumber}>3</Text>
-            </View>
-          </View>
+        <Text style={styles.stepLabel}>
+          STEP 0{currentStep}
+        </Text>
+        <Text style={styles.stepDescription}>
+          {currentStep === 1 && '소재를 택인해 주세요.'}
+          {currentStep === 2 && '크기를 택인해 주세요.'}
+          {currentStep === 3 && '색상감을 택인해 주세요.'}
+        </Text>
 
-          <View style={styles.stepLabels}>
-            <Text style={[styles.stepLabel, currentStep === 1 && styles.stepLabelActive]}>
-              상담
-            </Text>
-            <Text style={[styles.stepLabel, currentStep === 2 && styles.stepLabelActive]}>
-              취향진단
-            </Text>
-            <Text style={[styles.stepLabel, currentStep === 3 && styles.stepLabelActive]}>
-              결과분석
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.contentCard}>
+        {/* STEP 01: 소재 선택 */}
+        {currentStep === 1 && (
           <View style={styles.content}>
-            {currentStep === 1 && (
-              <>
-                <Text style={styles.contentTitle}>기본 상담 진행 중</Text>
-                <Text style={styles.contentText}>
-                  고객님의 선호도와 라이프스타일에 대해 상담하고 있습니다.
-                </Text>
-                <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>• 음식 선호도 확인</Text>
-                  <Text style={styles.infoText}>• 라이프스타일 파악</Text>
-                  <Text style={styles.infoText}>• 예산 및 목표 설정</Text>
-                </View>
-              </>
-            )}
+            <Text style={styles.sectionTitle}>고객이 자신 선호 제품</Text>
+            <View style={styles.optionGroup}>
+              {['A', 'B', 'C'].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.option,
+                    selections.product === item && styles.optionSelected,
+                  ]}
+                  onPress={() => setSelections({ ...selections, product: item })}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      selections.product === item && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>품목 {item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-            {currentStep === 2 && (
-              <>
-                <Text style={styles.contentTitle}>AI 취향 진단 진행 중</Text>
-                <Text style={styles.contentText}>
-                  고급 AI 알고리즘으로 고객님의 취향을 분석하고 있습니다.
-                </Text>
-                <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>• 색상 선호도 분석</Text>
-                  <Text style={styles.infoText}>• 스타일 패턴 추출</Text>
-                  <Text style={styles.infoText}>• 맞춤 추천 생성</Text>
-                </View>
-              </>
-            )}
+            <Text style={styles.sectionTitle}>소재체험</Text>
+            <View style={styles.sliderContainer}>
+              <View style={styles.sliderTrack}>
+                <View
+                  style={[
+                    styles.sliderFill,
+                    { width: `${(selections.texture / 5) * 100}%` },
+                  ]}
+                />
+              </View>
+              <View style={styles.sliderLabels}>
+                {['무늘음', '미끄럼', '단단', '밝음', '빨간 밝음'].map((label, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    onPress={() => setSelections({ ...selections, texture: idx + 1 })}
+                  >
+                    <Text
+                      style={[
+                        styles.sliderLabel,
+                        selections.texture === idx + 1 && styles.sliderLabelActive,
+                      ]}
+                    >
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
 
-            {currentStep === 3 && (
-              <>
-                <Text style={styles.contentTitle}>결과 분석 중</Text>
-                <Text style={styles.contentText}>
-                  분석된 데이터를 바탕으로 최종 결과를 정리하고 있습니다.
-                </Text>
-                <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>• 맞춤 취향 프로필 생성</Text>
-                  <Text style={styles.infoText}>• 추천 선물 큐레이션</Text>
-                  <Text style={styles.infoText}>• 최종 리포트 작성</Text>
-                </View>
-              </>
-            )}
+            <Text style={styles.sectionTitle}>직원 메모(선택)</Text>
+            <View style={styles.memoBox}>
+              <Text style={styles.memoText}>보드로운 가죽 소재를 선호함</Text>
+            </View>
           </View>
-        </View>
+        )}
 
-        <Button
-          title={currentStep < 3 ? '다음 단계' : '취향 정보 입력'}
-          full
-          onPress={handleNext}
-          style={{ marginTop: 20 }}
-        />
+        {/* STEP 02: 크기 및 수브감 */}
+        {currentStep === 2 && (
+          <View style={styles.content}>
+            <Text style={styles.sectionTitle}>선호 크기</Text>
+            <View style={styles.optionGroup}>
+              {['Small', 'Medium', 'Large'].map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.option,
+                    selections.size === item && styles.optionSelected,
+                  ]}
+                  onPress={() => setSelections({ ...selections, size: item })}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      selections.size === item && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.sectionTitle}>수브감</Text>
+            <View style={styles.optionGroup}>
+              {[
+                { key: 'medium', label: '중부감' },
+                { key: 'bo', label: '보음' },
+                { key: 'bujo', label: '부조음' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[
+                    styles.option,
+                    selections.subgan === item.key && styles.optionSelected,
+                  ]}
+                  onPress={() => setSelections({ ...selections, subgan: item.key })}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      selections.subgan === item.key && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* STEP 03: 색상감 및 무게 */}
+        {currentStep === 3 && (
+          <View style={styles.content}>
+            <Text style={styles.sectionTitle}>색상감</Text>
+            <View style={styles.optionGroup}>
+              {[
+                { key: 'light', label: '빠운 판금' },
+                { key: 'normal', label: '판금' },
+                { key: 'bright', label: '보음' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[
+                    styles.option,
+                    selections.color === item.key && styles.optionSelected,
+                  ]}
+                  onPress={() => setSelections({ ...selections, color: item.key })}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      selections.color === item.key && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.sectionTitle}>무게</Text>
+            <View style={styles.optionGroup}>
+              {[
+                { key: 'light', label: '가벼움' },
+                { key: 'medium', label: '적당함' },
+                { key: 'heavy', label: '무거움' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[
+                    styles.option,
+                    selections.weight === item.key && styles.optionSelected,
+                  ]}
+                  onPress={() => setSelections({ ...selections, weight: item.key })}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      selections.weight === item.key && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        <View style={styles.buttonGroup}>
+          {currentStep > 1 && (
+            <Button
+              title="이전"
+              variant="secondary"
+              onPress={handlePrev}
+              style={{ flex: 1 }}
+            />
+          )}
+          <Button
+            title={currentStep < 3 ? '다음' : '다음'}
+            onPress={handleNext}
+            style={{ flex: 1 }}
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -154,39 +281,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  progressContainer: {
-    marginBottom: 24,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: colors.accent1,
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.main,
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 13,
-    color: colors.subtitle,
-    textAlign: 'right',
-  },
-  stepContainer: {
-    marginBottom: 24,
-  },
   stepIndicator: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   stepDot: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.accent1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -197,61 +305,122 @@ const styles = StyleSheet.create({
     backgroundColor: colors.main,
     borderColor: colors.main,
   },
-  stepNumber: {
-    fontSize: 16,
+  stepNum: {
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
   },
+  stepNumActive: {
+    color: colors.white,
+  },
   stepLine: {
-    flex: 1,
+    width: 32,
     height: 2,
     backgroundColor: colors.border,
-    marginHorizontal: 4,
   },
   stepLineActive: {
     backgroundColor: colors.main,
   },
-  stepLabels: {
+  stepLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.main,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  stepDescription: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 20,
+  },
+  content: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+    marginTop: 16,
+  },
+  optionGroup: {
+    gap: 8,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: colors.accent1,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  optionSelected: {
+    backgroundColor: colors.white,
+    borderColor: colors.main,
+  },
+  optionRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    marginRight: 12,
+  },
+  optionRadioSelected: {
+    borderColor: colors.main,
+    backgroundColor: colors.main,
+  },
+  optionText: {
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '500',
+  },
+  sliderContainer: {
+    marginBottom: 12,
+  },
+  sliderTrack: {
+    height: 6,
+    backgroundColor: colors.accent1,
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  sliderFill: {
+    height: '100%',
+    backgroundColor: colors.main,
+  },
+  sliderLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 4,
   },
-  stepLabel: {
-    fontSize: 12,
+  sliderLabel: {
+    fontSize: 11,
     color: colors.subtitle,
     textAlign: 'center',
     flex: 1,
   },
-  stepLabelActive: {
+  sliderLabelActive: {
     color: colors.main,
     fontWeight: '600',
   },
-  contentCard: {
-    backgroundColor: colors.accent1,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-  },
-  content: {},
-  contentTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  contentText: {
-    fontSize: 14,
-    color: colors.subtitle,
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  infoBox: {
+  memoBox: {
     backgroundColor: colors.white,
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  infoText: {
-    fontSize: 13,
+  memoText: {
+    fontSize: 12,
     color: colors.text,
-    marginBottom: 8,
+    lineHeight: 18,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
   },
 });

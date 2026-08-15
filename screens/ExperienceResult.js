@@ -1,124 +1,224 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput } from 'react-native';
 import { FakeStatusBar, Button } from '../components/Shared';
 import { colors } from '../theme';
 
 export default function ExperienceResult({ navigate }) {
-  const [shareVisible, setShareVisible] = useState(false);
+  const [stage, setStage] = useState('step04'); // 'step04' -> 'result' -> 'complete'
+  const [impression, setImpression] = useState('positive');
+  const [showComplete, setShowComplete] = useState(false);
+
+  const [resultData, setResultData] = useState({
+    texture: '부드러운 가죽 선호',
+    size: 'Small 선호',
+    color: '밝은 우즉',
+    weight: '가벼운 제품 선호',
+    memo: '스트럴이 길고 가벼운 제품에 금정적인 반응을 보임.',
+  });
+
+  const impressionOptions = [
+    { key: 'light', label: '따운 인상' },
+    { key: 'confident', label: '단호' },
+    { key: 'soft', label: '보음' },
+    { key: 'dislike', label: '선호하지 않음' },
+  ];
+
+  const handleNextStep = () => {
+    if (stage === 'step04') {
+      setStage('result');
+    } else if (stage === 'result') {
+      setShowComplete(true);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (stage === 'result') {
+      setStage('step04');
+    }
+  };
+
+  const handleComplete = () => {
+    navigate('experience-management');
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('experience-management')}>
+          <TouchableOpacity onPress={() => navigate('experience-detail')}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>체험 결과 확인</Text>
+          <Text style={styles.title}>
+            {stage === 'step04' ? '체험 결과 확인' : '취향 결과 확인'}
+          </Text>
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={styles.resultCard}>
-          <View style={styles.resultHeader}>
-            <Text style={styles.resultTitle}>취향 분석 완료!</Text>
-            <Text style={styles.resultSubtitle}>당신의 선호도가 분석되었습니다.</Text>
+        {/* STEP 04: 전체 인상 선택 */}
+        {stage === 'step04' && (
+          <View style={styles.content}>
+            <Text style={styles.stepLabel}>STEP 04</Text>
+            <Text style={styles.stepDescription}>
+              고객의 전체의 관종을 선태해주세요.
+            </Text>
+
+            <Text style={styles.sectionTitle}>전체적인 인상</Text>
+            <View style={styles.optionGroup}>
+              {impressionOptions.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.option,
+                    impression === opt.key && styles.optionSelected,
+                  ]}
+                  onPress={() => setImpression(opt.key)}
+                >
+                  <View
+                    style={[
+                      styles.optionRadio,
+                      impression === opt.key && styles.optionRadioSelected,
+                    ]}
+                  />
+                  <Text style={styles.optionText}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.sectionTitle}>추가 메모</Text>
+            <View style={styles.memoInput}>
+              <TextInput
+                style={styles.memoText}
+                multiline
+                placeholder="스타일이 간 제품을 더 편하게 누가는 것으로 평되임"
+                placeholderTextColor={colors.subtitle}
+              />
+            </View>
+
+            <View style={styles.buttonGroup}>
+              <Button
+                title="이전"
+                variant="secondary"
+                onPress={handlePrevStep}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="다음"
+                onPress={handleNextStep}
+                style={{ flex: 1 }}
+              />
+            </View>
           </View>
+        )}
 
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📊 분석 결과</Text>
+        {/* 취향 결과 확인 */}
+        {stage === 'result' && (
+          <View style={styles.content}>
+            <Text style={styles.resultDescription}>
+              김사자 고객님의 위한 권고을 확인해세요.
+            </Text>
 
             <View style={styles.resultItem}>
-              <View style={styles.resultLabel}>
-                <Text style={styles.resultLabelText}>선호 색상</Text>
-              </View>
-              <View style={styles.resultValue}>
-                <View style={[styles.colorPill, { backgroundColor: '#6D1F32' }]} />
-                <View style={[styles.colorPill, { backgroundColor: '#8B4789' }]} />
-                <View style={[styles.colorPill, { backgroundColor: '#C4A69D' }]} />
+              <Text style={styles.resultLabel}>소재</Text>
+              <View style={styles.resultInputBox}>
+                <TextInput
+                  style={styles.resultInputText}
+                  value={resultData.texture}
+                  onChangeText={(text) =>
+                    setResultData({ ...resultData, texture: text })
+                  }
+                />
               </View>
             </View>
 
             <View style={styles.resultItem}>
-              <View style={styles.resultLabel}>
-                <Text style={styles.resultLabelText}>스타일</Text>
+              <Text style={styles.resultLabel}>크기</Text>
+              <View style={styles.resultInputBox}>
+                <TextInput
+                  style={styles.resultInputText}
+                  value={resultData.size}
+                  onChangeText={(text) =>
+                    setResultData({ ...resultData, size: text })
+                  }
+                />
               </View>
-              <Text style={styles.resultValueText}>클래식 & 모던</Text>
             </View>
 
             <View style={styles.resultItem}>
-              <View style={styles.resultLabel}>
-                <Text style={styles.resultLabelText}>선호도</Text>
+              <Text style={styles.resultLabel}>색상감</Text>
+              <View style={styles.resultInputBox}>
+                <TextInput
+                  style={styles.resultInputText}
+                  value={resultData.color}
+                  onChangeText={(text) =>
+                    setResultData({ ...resultData, color: text })
+                  }
+                />
               </View>
-              <Text style={styles.resultValueText}>정교함 70% | 캐주얼 30%</Text>
             </View>
 
             <View style={styles.resultItem}>
-              <View style={styles.resultLabel}>
-                <Text style={styles.resultLabelText}>취향 점수</Text>
+              <Text style={styles.resultLabel}>무게</Text>
+              <View style={styles.resultInputBox}>
+                <TextInput
+                  style={styles.resultInputText}
+                  value={resultData.weight}
+                  onChangeText={(text) =>
+                    setResultData({ ...resultData, weight: text })
+                  }
+                />
               </View>
-              <View style={styles.scoreContainer}>
-                <View style={styles.scoreBar}>
-                  <View style={[styles.scoreFill, { width: '85%' }]} />
-                </View>
-                <Text style={styles.scoreText}>85점</Text>
+            </View>
+
+            <View style={styles.resultItem}>
+              <Text style={styles.resultLabel}>직원 메모</Text>
+              <View style={styles.resultInputBox}>
+                <TextInput
+                  style={[styles.resultInputText, styles.resultMemoInput]}
+                  value={resultData.memo}
+                  onChangeText={(text) =>
+                    setResultData({ ...resultData, memo: text })
+                  }
+                  multiline
+                />
               </View>
+            </View>
+
+            <View style={styles.buttonGroup}>
+              <Button
+                title="수정하기"
+                variant="secondary"
+                onPress={handlePrevStep}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="완료"
+                onPress={handleNextStep}
+                style={{ flex: 1 }}
+              />
             </View>
           </View>
+        )}
 
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🎁 추천 선물</Text>
-            <View style={styles.recommendationBox}>
-              <Text style={styles.recommendationText}>
-                분석된 취향을 바탕으로 맞춤형 선물을 추천합니다.
+        {/* 완료 팝업 */}
+        <Modal visible={showComplete} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.checkmark}>
+                <Text style={styles.checkmarkText}>✓</Text>
+              </View>
+              <Text style={styles.completeTitle}>체험이 완료되었습니다.</Text>
+              <Text style={styles.completeDescription}>
+                실시간 김사자 고객가 AI 추천 정보에 반영됩니다.
               </Text>
-              <View style={styles.recommendationItems}>
-                <View style={styles.recommendationItem}>
-                  <Text style={styles.itemTitle}>프리미엄 향수</Text>
-                  <Text style={styles.itemDescription}>고급스러운 향기</Text>
-                </View>
-                <View style={styles.recommendationItem}>
-                  <Text style={styles.itemTitle}>명품 악세서리</Text>
-                  <Text style={styles.itemDescription}>세련된 스타일</Text>
-                </View>
-                <View style={styles.recommendationItem}>
-                  <Text style={styles.itemTitle}>프리미엄 와인</Text>
-                  <Text style={styles.itemDescription}>좋은 맛과 향</Text>
-                </View>
-              </View>
+              <Button
+                title="확인"
+                onPress={handleComplete}
+                style={{ marginTop: 24 }}
+              />
             </View>
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💬 상담사 의견</Text>
-            <View style={styles.feedbackBox}>
-              <Text style={styles.feedbackText}>
-                고객님은 정교한 감각과 세련된 취향을 갖추고 계신 것으로 분석됩니다. 고급 브랜드와
-                프리미엄 제품을 선호하시며, 기능성과 미적 가치의 균형을 중시하시는 경향이 있습니다.
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <Button
-            title="결과 공유하기"
-            full
-            variant="secondary"
-            onPress={() => setShareVisible(true)}
-            style={{ marginBottom: 12 }}
-          />
-          <Button
-            title="홈으로 돌아가기"
-            full
-            onPress={() => navigate('home')}
-          />
-        </View>
+        </Modal>
       </ScrollView>
     </View>
   );
@@ -143,131 +243,149 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  resultCard: {
-    backgroundColor: colors.accent1,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
+  content: {
+    marginBottom: 24,
   },
-  resultHeader: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  resultTitle: {
-    fontSize: 18,
+  stepLabel: {
+    fontSize: 14,
     fontWeight: '700',
     color: colors.main,
-    marginBottom: 4,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  resultSubtitle: {
+  stepDescription: {
+    fontSize: 14,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  resultDescription: {
     fontSize: 14,
     color: colors.subtitle,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 16,
-  },
-  section: {
-    marginBottom: 0,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  resultItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  resultLabel: {
-    flex: 1,
-  },
-  resultLabelText: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 12,
+    marginTop: 16,
   },
-  resultValue: {
-    flexDirection: 'row',
+  optionGroup: {
     gap: 8,
   },
-  colorPill: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: colors.accent1,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  resultValueText: {
+  optionSelected: {
+    backgroundColor: colors.white,
+    borderColor: colors.main,
+  },
+  optionRadio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.border,
+    marginRight: 12,
+  },
+  optionRadioSelected: {
+    borderColor: colors.main,
+    backgroundColor: colors.main,
+  },
+  optionText: {
     fontSize: 13,
     color: colors.text,
     fontWeight: '500',
   },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  scoreBar: {
-    flex: 1,
-    height: 6,
-    backgroundColor: colors.white,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  scoreFill: {
-    height: '100%',
-    backgroundColor: colors.main,
-  },
-  scoreText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.main,
-    minWidth: 40,
-  },
-  recommendationBox: {
+  memoInput: {
     backgroundColor: colors.white,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 12,
+    minHeight: 80,
   },
-  recommendationText: {
+  memoText: {
     fontSize: 13,
-    color: colors.subtitle,
-    marginBottom: 12,
+    color: colors.text,
+    textAlignVertical: 'top',
   },
-  recommendationItems: {
-    gap: 8,
+  resultItem: {
+    marginBottom: 16,
   },
-  recommendationItem: {
-    backgroundColor: colors.accent1,
-    padding: 10,
-    borderRadius: 8,
-  },
-  itemTitle: {
+  resultLabel: {
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 8,
   },
-  itemDescription: {
-    fontSize: 12,
-    color: colors.subtitle,
-    marginTop: 2,
-  },
-  feedbackBox: {
+  resultInputBox: {
     backgroundColor: colors.white,
     borderRadius: 12,
-    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
-  feedbackText: {
+  resultInputText: {
     fontSize: 13,
     color: colors.text,
-    lineHeight: 20,
   },
-  buttonContainer: {
-    marginTop: 20,
+  resultMemoInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.accent1,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  checkmark: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  checkmarkText: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: colors.main,
+  },
+  completeTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  completeDescription: {
+    fontSize: 13,
+    color: colors.subtitle,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

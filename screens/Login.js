@@ -17,9 +17,9 @@ export default function Login({ navigate }) {
       return;
     }
 
-    // admin account -> employee page
+    // admin account -> experience management page
     if (id === 'admin' && pw === '1234') {
-      navigate('employee');
+      navigate('experience-management');
     }
     // personal account -> home page
     else if (id === 'user123' && pw === '0000') {

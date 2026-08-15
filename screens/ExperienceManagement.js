@@ -6,43 +6,38 @@ import { colors } from '../theme';
 const RESERVATIONS = [
   {
     id: 1,
-    date: '2024-08-20',
-    time: '14:00',
-    storeName: '송파점',
-    status: '대기중',
+    date: '2026-08-06',
+    timeStart: '14:00',
+    timeEnd: '15:00',
+    customerName: '김사자',
+    program: '기본 ~ 취향 축하 선물',
+    status: '계획 대기',
     statusColor: colors.blue.text,
-    memo: '기본 상담 예정',
   },
   {
     id: 2,
-    date: '2024-08-18',
-    time: '11:00',
-    storeName: '강남점',
-    status: '진행중',
+    date: '2026-08-06',
+    timeStart: '18:00',
+    timeEnd: '19:00',
+    customerName: '김사자',
+    program: '기본 ~ 취향 축하 선물',
+    status: '계획 중',
     statusColor: colors.green.text,
-    memo: '체험 진행 중',
   },
   {
     id: 3,
-    date: '2024-08-15',
-    time: '15:30',
-    storeName: '명동점',
+    date: '2026-08-06',
+    timeStart: '14:00',
+    timeEnd: '15:00',
+    customerName: '김사자',
+    program: '기본 ~ 취향 축하 선물',
     status: '완료',
     statusColor: colors.yellow.text,
-    memo: '취향 진단 완료',
   },
 ];
 
 export default function ExperienceManagement({ navigate }) {
-  const [selectedStatus, setSelectedStatus] = useState('all');
-
-  const filteredReservations = RESERVATIONS.filter((res) => {
-    if (selectedStatus === 'all') return true;
-    if (selectedStatus === 'pending') return res.status === '대기중';
-    if (selectedStatus === 'progress') return res.status === '진행중';
-    if (selectedStatus === 'completed') return res.status === '완료';
-    return true;
-  });
+  const todayReservations = RESERVATIONS.filter((res) => res.date === '2026-08-06');
 
   return (
     <View style={{ flex: 1 }}>
@@ -56,81 +51,38 @@ export default function ExperienceManagement({ navigate }) {
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={styles.filterContainer}>
-          <TouchableOpacity
-            style={[styles.filterBtn, selectedStatus === 'all' && styles.filterBtnActive]}
-            onPress={() => setSelectedStatus('all')}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                selectedStatus === 'all' && styles.filterBtnTextActive,
-              ]}
-            >
-              전체
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterBtn, selectedStatus === 'pending' && styles.filterBtnActive]}
-            onPress={() => setSelectedStatus('pending')}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                selectedStatus === 'pending' && styles.filterBtnTextActive,
-              ]}
-            >
-              대기중
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterBtn, selectedStatus === 'progress' && styles.filterBtnActive]}
-            onPress={() => setSelectedStatus('progress')}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                selectedStatus === 'progress' && styles.filterBtnTextActive,
-              ]}
-            >
-              진행중
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.filterBtn, selectedStatus === 'completed' && styles.filterBtnActive]}
-            onPress={() => setSelectedStatus('completed')}
-          >
-            <Text
-              style={[
-                styles.filterBtnText,
-                selectedStatus === 'completed' && styles.filterBtnTextActive,
-              ]}
-            >
-              완료
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.todaySection}>
+          <View style={styles.todayHeader}>
+            <Text style={styles.todayTitle}>오늘의 예약</Text>
+            <Text style={styles.todayCount}>{todayReservations.length}건</Text>
+          </View>
+          <Text style={styles.todayDate}>2026.08.06</Text>
         </View>
 
         <View style={styles.reservationList}>
-          {filteredReservations.map((res) => (
+          {todayReservations.map((res) => (
             <TouchableOpacity
               key={res.id}
               style={styles.reservationCard}
               onPress={() => navigate('experience-detail', { reservation: res })}
             >
-              <View style={styles.cardHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.date}>{res.date} {res.time}</Text>
-                  <Text style={styles.storeName}>{res.storeName}</Text>
-                </View>
+              <View style={styles.timeSection}>
+                <Text style={styles.time}>{res.timeStart} ~ {res.timeEnd}</Text>
+              </View>
+
+              <View style={styles.infoSection}>
+                <Text style={styles.customerName}>{res.customerName}</Text>
+                <Text style={styles.program}>{res.program}</Text>
+              </View>
+
+              <View style={styles.cardFooter}>
                 <View style={[styles.statusBadge, { backgroundColor: res.statusColor + '20' }]}>
                   <Text style={[styles.statusBadgeText, { color: res.statusColor }]}>
                     {res.status}
                   </Text>
                 </View>
+                <Text style={styles.detailLink}>자세히 보기 ›</Text>
               </View>
-              <Text style={styles.memo}>{res.memo}</Text>
-              <Text style={styles.arrow}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -158,31 +110,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  filterContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  todaySection: {
     marginBottom: 20,
-    justifyContent: 'center',
-    flexWrap: 'wrap',
   },
-  filterBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.main,
-    backgroundColor: colors.white,
+  todayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  filterBtnActive: {
-    backgroundColor: colors.main,
+  todayTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
   },
-  filterBtnText: {
-    fontSize: 12,
-    fontWeight: '500',
+  todayCount: {
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.main,
   },
-  filterBtnTextActive: {
-    color: colors.white,
+  todayDate: {
+    fontSize: 14,
+    color: colors.subtitle,
   },
   reservationList: {
     gap: 12,
@@ -191,42 +140,47 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent1,
     borderRadius: 16,
     padding: 16,
-    paddingRight: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
+  timeSection: {
+    marginBottom: 12,
   },
-  date: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  storeName: {
+  time: {
     fontSize: 15,
     fontWeight: '700',
     color: colors.text,
   },
+  infoSection: {
+    marginBottom: 12,
+  },
+  customerName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  program: {
+    fontSize: 13,
+    color: colors.subtitle,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 6,
   },
   statusBadgeText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  memo: {
+  detailLink: {
     fontSize: 13,
-    color: colors.subtitle,
-    marginBottom: 8,
-  },
-  arrow: {
-    fontSize: 18,
     color: colors.textMuted,
-    textAlign: 'right',
+    fontWeight: '500',
   },
 });
