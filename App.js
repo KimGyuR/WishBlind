@@ -18,17 +18,36 @@ import TasteComplete from './screens/TasteComplete';
 import AIResults from './screens/AIResults';
 import AIDetail from './screens/AIDetail';
 import GiftDelivery from './screens/GiftDelivery';
+import Employee from './screens/Employee';
+import Personal from './screens/Personal';
+import ExperienceManagement from './screens/ExperienceManagement';
+import ExperienceDetail from './screens/ExperienceDetail';
+import ExperienceProgress from './screens/ExperienceProgress';
+import ExperienceResult from './screens/ExperienceResult';
 
 import { colors } from './theme';
 
 export default function App() {
   const [page, setPage] = useState('login');
 
-  const nav = (p) => setPage(p);
+  const nav = (p, params) => {
+    // Store params in a temporary object
+    if (params) {
+      global.routeParams = global.routeParams || {};
+      global.routeParams[p] = params;
+    }
+    setPage(p);
+  };
 
   const screens = {
     login: <Login navigate={nav} />,
     home: <Home navigate={nav} />,
+    employee: <Employee navigate={nav} />,
+    personal: <Personal navigate={nav} />,
+    'experience-management': <ExperienceManagement navigate={nav} />,
+    'experience-detail': <ExperienceDetail navigate={nav} route={{ params: global.routeParams?.['experience-detail'] }} />,
+    'experience-progress': <ExperienceProgress navigate={nav} />,
+    'experience-result': <ExperienceResult navigate={nav} />,
     'gift-step1': <GiftStep1 navigate={nav} />,
     'gift-step2': <GiftStep2 navigate={nav} />,
     'gift-step3': <GiftStep3 navigate={nav} />,

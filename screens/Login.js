@@ -4,9 +4,31 @@ import { FakeStatusBar, UnderlineInput, Button, LogoBlock } from '../components/
 import { colors } from '../theme';
 
 export default function Login({ navigate }) {
-  const [id, setId] = useState('sssuin__');
-  const [pw, setPw] = useState('**********');
+  const [id, setId] = useState('user123');
+  const [pw, setPw] = useState('0000');
   const [auto, setAuto] = useState(true);
+  const [error, setError] = useState('');
+
+  const handleLogin = () => {
+    setError('');
+
+    if (!id.trim() || !pw.trim()) {
+      setError('아이디와 비밀번호를 입력해주세요');
+      return;
+    }
+
+    // admin account -> employee page
+    if (id === 'admin' && pw === '1234') {
+      navigate('employee');
+    }
+    // personal account -> home page
+    else if (id === 'user123' && pw === '0000') {
+      navigate('home');
+    }
+    else {
+      setError('아이디 또는 비밀번호가 올바르지 않습니다');
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -38,7 +60,6 @@ export default function Login({ navigate }) {
               value={pw}
               onChangeText={setPw}
               placeholder="비밀번호를 입력해주세요"
-              secureTextEntry
               style={{ paddingRight: 32 }}
             />
             {!!pw && (
@@ -59,7 +80,9 @@ export default function Login({ navigate }) {
           <Text style={styles.findText}>아이디/비밀번호 찾기</Text>
         </View>
 
-        <Button title="로그인" full onPress={() => navigate('home')} />
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <Button title="로그인" full onPress={handleLogin} />
 
         <TouchableOpacity
           style={{ marginTop: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 2 }}
@@ -103,6 +126,7 @@ const styles = StyleSheet.create({
   checkboxMark: { color: 'white', fontSize: 11 },
   checkboxLabel: { fontSize: 12, color: colors.text },
   findText: { fontSize: 12, color: colors.findText },
+  errorText: { fontSize: 13, color: '#d32f2f', marginBottom: 16, textAlign: 'center', fontWeight: '500' },
   signupText: { fontSize: 14, color: colors.main, fontWeight: '500' },
   signupArrow: { fontSize: 13, color: colors.main },
 });

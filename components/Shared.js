@@ -319,7 +319,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.text,
     backgroundColor: colors.white,
-    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
   formTextarea: { height: 90, borderRadius: 16, textAlignVertical: 'top', paddingTop: 12 },
 
@@ -334,7 +333,6 @@ const styles = StyleSheet.create({
     borderColor: colors.main,
     borderRadius: 22,
     backgroundColor: colors.white,
-    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
   selectValue: { fontSize: 13, color: colors.text },
   selectPlaceholder: { fontSize: 13, color: colors.titleSub },
@@ -366,7 +364,6 @@ const styles = StyleSheet.create({
     margin: 0,
     backgroundColor: 'transparent',
     borderWidth: 0,
-    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
 
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -410,7 +407,6 @@ const styles = StyleSheet.create({
     margin: 0,
     backgroundColor: 'transparent',
     borderWidth: 0,
-    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
   pillInputMultiline: { textAlignVertical: 'top' },
   pillValue: { fontSize: 13, color: colors.text },

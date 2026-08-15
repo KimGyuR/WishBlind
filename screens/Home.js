@@ -15,7 +15,7 @@ export default function Home({ navigate }) {
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
         <View style={{ alignItems: 'flex-end', paddingTop: 6, paddingBottom: 4 }}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigate('personal')}>
             <ProfileIcon size={22} color={colors.main} />
           </TouchableOpacity>
         </View>
@@ -25,6 +25,7 @@ export default function Home({ navigate }) {
         <View style={{ gap: 14, marginBottom: 20 }}>
           <Button title="선물 시작하기" full onPress={() => navigate('gift-step1')} />
           <Button title="초대받고 취향 입력하기" full onPress={() => navigate('invite-confirm')} />
+          <Button title="매장 체험 관리" full variant="secondary" onPress={() => navigate('experience-management')} />
         </View>
 
         <View style={styles.topDivider} />
@@ -93,7 +94,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
   historyTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   statusText: { fontSize: 14, fontWeight: '500' },
