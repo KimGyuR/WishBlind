@@ -1,144 +1,97 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { FakeStatusBar, Button, ProfileIcon } from '../components/Shared';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, Platform } from 'react-native';
+import { FakeStatusBar, Header, Button, ProfileIcon } from '../components/Shared';
 import { colors } from '../theme';
 
+function ToggleRow({ label, value, onChange }) {
+  return (
+    <View style={styles.toggleRow}>
+      <Text style={styles.toggleLabel}>{label}</Text>
+      <View style={styles.toggleSwitch}>
+        <TouchableOpacity
+          style={[styles.toggleSide, value && styles.toggleSideOn]}
+          onPress={() => onChange(true)}
+        >
+          <Text style={[styles.toggleText, value && styles.toggleTextOn]}>ON</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toggleSide, !value && styles.toggleSideOff]}
+          onPress={() => onChange(false)}
+        >
+          <Text style={[styles.toggleText, !value && styles.toggleTextOff]}>OFF</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function ClearableInput({ value, onChangeText, placeholder, secureTextEntry }) {
+  return (
+    <View style={styles.inputBox}>
+      <View style={styles.inputField}>
+        <TextInput
+          style={styles.inputInner}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry={secureTextEntry}
+        />
+      </View>
+      {!!value && (
+        <TouchableOpacity style={styles.clearBtn} onPress={() => onChangeText('')}>
+          <Text style={styles.clearBtnText}>✕</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 export default function Personal({ navigate }) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [photo, setPhoto] = useState('');
-  const [likeFood, setLikeFood] = useState('');
-  const [dislikeFood, setDislikeFood] = useState('');
-  const [color, setColor] = useState('');
-  const [selectedColors, setSelectedColors] = useState([]);
-
-  const colorOptions = ['빨강', '파랑', '초록', '노랑', '검정', '흰색'];
-
-  const toggleColor = (col) => {
-    if (selectedColors.includes(col)) {
-      setSelectedColors(selectedColors.filter(c => c !== col));
-    } else {
-      setSelectedColors([...selectedColors, col]);
-    }
-  };
-
-  const handleSave = () => {
-    if (!name.trim()) {
-      alert('이름을 입력해주세요');
-      return;
-    }
-    alert('정보가 저장되었습니다!');
-  };
+  const [nickname, setNickname] = useState('멋쟁이사자');
+  const [email, setEmail] = useState('aa12345@naver.com');
+  const [password, setPassword] = useState('**********');
+  const [notifyAll, setNotifyAll] = useState(true);
+  const [notifyGift, setNotifyGift] = useState(true);
+  const [notifyTaste, setNotifyTaste] = useState(true);
 
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('home')}>
-            <Text style={styles.backButton}>←</Text>
+        <Header title="내 페이지" onBack={() => navigate('home')} />
+
+        <View style={styles.avatarWrap}>
+          <View style={styles.avatar}>
+            <ProfileIcon size={48} color={colors.main} />
+          </View>
+          <TouchableOpacity style={styles.photoBtn}>
+            <Text style={styles.photoBtnText}>사진 수정</Text>
           </TouchableOpacity>
-          <View style={styles.profileSection}>
-            <View style={styles.avatarLarge}>
-              <ProfileIcon size={40} color={colors.main} />
-            </View>
-            <Text style={styles.headerTitle}>내 정보</Text>
-          </View>
         </View>
 
-        <View style={styles.formSection}>
-          {/* Name Input */}
-          <View style={styles.formGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>이름</Text>
-              <Text style={styles.required}>*</Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="이름을 입력해주세요"
-              placeholderTextColor={colors.textMuted}
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>이메일</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="이메일을 입력해주세요"
-              placeholderTextColor={colors.textMuted}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-            />
-          </View>
-
-          {/* Photo Section */}
-          <View style={styles.formGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>정보보호</Text>
-              <Text style={styles.optional}>(선택사항)</Text>
-            </View>
-            <TouchableOpacity style={styles.photoButton}>
-              <Text style={styles.photoButtonText}>
-                {photo ? '사진 변경' : '사진 추가'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Like Food */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>선호 음식</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="선호하는 음식을 입력해주세요"
-              placeholderTextColor={colors.textMuted}
-              value={likeFood}
-              onChangeText={setLikeFood}
-              multiline
-            />
-          </View>
-
-          {/* Dislike Food */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>선호하지 않는 음식</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="선호하지 않는 음식을 입력해주세요"
-              placeholderTextColor={colors.textMuted}
-              value={dislikeFood}
-              onChangeText={setDislikeFood}
-              multiline
-            />
-          </View>
-
-          {/* Color Selection */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>선호 색상</Text>
-            <View style={styles.colorGrid}>
-              {colorOptions.map((col) => (
-                <TouchableOpacity
-                  key={col}
-                  style={[
-                    styles.colorOption,
-                    selectedColors.includes(col) && styles.colorOptionSelected,
-                  ]}
-                  onPress={() => toggleColor(col)}
-                >
-                  <Text style={styles.colorLabel}>{col}</Text>
-                  {selectedColors.includes(col) && (
-                    <Text style={styles.colorCheck}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Save Button */}
-          <Button title="정보 수정하기" full onPress={handleSave} style={{ marginTop: 20 }} />
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>닉네임</Text>
+          <ClearableInput value={nickname} onChangeText={setNickname} placeholder="닉네임을 입력해주세요" />
         </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>이메일</Text>
+          <ClearableInput value={email} onChangeText={setEmail} placeholder="이메일을 입력해주세요" />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>비밀번호 변경</Text>
+          <ClearableInput value={password} onChangeText={setPassword} secureTextEntry placeholder="비밀번호를 입력해주세요" />
+        </View>
+
+        <View style={{ marginTop: 8, marginBottom: 24 }}>
+          <ToggleRow label="알림 설정" value={notifyAll} onChange={setNotifyAll} />
+          <ToggleRow label="선물진행 알림" value={notifyGift} onChange={setNotifyGift} />
+          <ToggleRow label="취향 진행 알림" value={notifyTaste} onChange={setNotifyTaste} />
+        </View>
+
+        <Button title="정보 수정 완료" full onPress={() => navigate('home')} />
       </ScrollView>
     </View>
   );
@@ -146,118 +99,76 @@ export default function Personal({ navigate }) {
 
 const styles = StyleSheet.create({
   screen: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 28 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginBottom: 20,
-  },
-  backButton: {
-    fontSize: 18,
-    color: colors.main,
-    fontWeight: '600',
-    marginRight: 12,
-  },
-  profileSection: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatarLarge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  avatarWrap: { alignItems: 'center', marginTop: 8, marginBottom: 24 },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: colors.accent1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  formSection: {
-    backgroundColor: colors.accent1,
-    borderRadius: 20,
-    padding: 20,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  required: {
-    fontSize: 14,
-    color: '#d32f2f',
-    marginLeft: 4,
-  },
-  optional: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginLeft: 4,
-  },
-  input: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minHeight: 44,
-  },
-  photoButton: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  photoButtonText: {
-    fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  colorOption: {
-    flex: 1,
-    minWidth: '48%',
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1.5,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
   },
-  colorOptionSelected: {
+  photoBtn: {
+    borderWidth: 1,
     borderColor: colors.main,
-    backgroundColor: '#f8f0f0',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
-  colorLabel: {
-    fontSize: 13,
-    fontWeight: '500',
+  photoBtnText: { fontSize: 12, color: colors.main, fontWeight: '600' },
+
+  formGroup: { marginBottom: 18 },
+  label: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 8 },
+
+  inputBox: { position: 'relative', justifyContent: 'center' },
+  inputField: {
+    width: '100%',
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    paddingRight: 44,
+  },
+  inputInner: {
+    fontSize: 14,
     color: colors.text,
+    padding: 0,
+    margin: 0,
+    ...Platform.select({ web: { outlineStyle: 'none', boxShadow: 'none' }, default: {} }),
   },
-  colorCheck: {
-    fontSize: 16,
-    color: colors.main,
-    marginTop: 4,
+  clearBtn: {
+    position: 'absolute',
+    right: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.main,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  clearBtnText: { color: 'white', fontSize: 11 },
+
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  toggleLabel: { fontSize: 14, fontWeight: '600', color: colors.text },
+  toggleSwitch: {
+    flexDirection: 'row',
+    borderRadius: 999,
+    overflow: 'hidden',
+    backgroundColor: colors.accent1,
+  },
+  toggleSide: { paddingVertical: 6, paddingHorizontal: 16 },
+  toggleSideOn: { backgroundColor: colors.main, borderRadius: 999 },
+  toggleSideOff: { backgroundColor: '#9a9491', borderRadius: 999 },
+  toggleText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
+  toggleTextOn: { color: colors.white },
+  toggleTextOff: { color: colors.white },
 });

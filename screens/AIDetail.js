@@ -4,11 +4,11 @@ import { FakeStatusBar, Header, Button, BtnRow } from '../components/Shared';
 import { colors } from '../theme';
 
 const AI_REASONS = [
-  '감정을 표현하기 위해 적합',
-  '블락 선호 브랜드',
-  '실용한 디자인',
-  '블락 취향 반영',
-  '브랜드 타입라이터 적합',
+  '취업 축하 의미와 적합',
+  '블랙 선호 반영',
+  '심플한 디자인',
+  '예산 범위 만족',
+  '브랜드 이미지와 적합',
 ];
 
 const SCORES = [
@@ -17,35 +17,34 @@ const SCORES = [
   ['실용성', '★★★★★'],
 ];
 
+const CONSIDER = ['사이즈가 약간 큽니다.', '체인 길이는 취향에 따라\n호불호가 있을 수 있습니다.'];
+
 export default function AIDetail({ navigate }) {
   const [showModal, setShowModal] = useState(false);
 
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 22, paddingBottom: 28 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingBottom: 28 }}>
         <Header title="AI 추천 상세" onBack={() => navigate('ai-results')} />
 
         <View style={styles.productImg}>
-          <Text style={{ fontSize: 52 }}>🐾</Text>
+          <Text style={{ fontSize: 48 }}>🐱🐶</Text>
         </View>
 
         <Text style={styles.productName}>후보 A 이름</Text>
 
         <Text style={styles.sectionTitle}>AI 추천 이유</Text>
-        <View style={{ marginBottom: 16, gap: 5 }}>
+        <View style={{ marginBottom: 20, gap: 5 }}>
           {AI_REASONS.map((r) => (
-            <View key={r} style={styles.checkRow}>
-              <Text style={styles.checkMark}>✓</Text>
-              <Text style={styles.checkText}>{r}</Text>
-            </View>
+            <Text key={r} style={styles.checkLine}>
+              ✓ {r}
+            </Text>
           ))}
         </View>
 
-        <View style={styles.divider} />
-
-        <Text style={styles.sectionTitle}>위형 분석</Text>
-        <View style={styles.scoreBox}>
+        <Text style={styles.sectionTitle}>취향 분석</Text>
+        <View style={{ marginBottom: 20 }}>
           {SCORES.map(([label, stars]) => (
             <View key={label} style={styles.scoreRow}>
               <Text style={styles.scoreLabel}>{label}</Text>
@@ -55,26 +54,26 @@ export default function AIDetail({ navigate }) {
         </View>
 
         <Text style={styles.sectionTitle}>AI 코멘트</Text>
-        <View style={[styles.aiBox, { marginBottom: 14 }]}>
-          <Text style={styles.aiBoxText}>
-            직업을 축하하는 사람에게{'\n'}
-            상대방을 신뢰하고 실용적 디자인으로 고안했을{'\n'}
-            가장 적합한 선물입니다.
+        <View style={[styles.box, { marginBottom: 20 }]}>
+          <Text style={styles.boxText}>
+            취업을 축하하는 의미와{'\n'}
+            상대방이 선호하는 심플한 디자인을 고려했을 때{'\n'}
+            가장 적합한 추천입니다.
           </Text>
         </View>
 
         <Text style={styles.sectionTitle}>고려할 점</Text>
-        <View style={[styles.aiBox, { marginBottom: 20 }]}>
-          <Text style={styles.aiBoxText}>
-            • 사이즈가 작을 수 있습니다.{'\n'}
-            • 개인별 선호도 차이{'\n'}
-            • 로컬에서도 구입이 가능합니다.
-          </Text>
+        <View style={[styles.box, { marginBottom: 24 }]}>
+          {CONSIDER.map((c) => (
+            <Text key={c} style={styles.considerLine}>
+              • {c}
+            </Text>
+          ))}
         </View>
 
         <BtnRow>
-          <Button title="이전" variant="outline" style={{ flex: 1 }} onPress={() => navigate('ai-results')} />
-          <Button title="상품 선택" style={{ flex: 1 }} onPress={() => setShowModal(true)} />
+          <Button title="이전" onPress={() => navigate('ai-results')} />
+          <Button title="상품 선택" onPress={() => setShowModal(true)} />
         </BtnRow>
       </ScrollView>
 
@@ -82,11 +81,11 @@ export default function AIDetail({ navigate }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modal}>
             <TouchableOpacity style={styles.modalClose} onPress={() => setShowModal(false)}>
-              <Text style={{ fontSize: 18, color: colors.textMuted }}>✕</Text>
+              <Text style={{ fontSize: 16, color: colors.textMuted }}>✕</Text>
             </TouchableOpacity>
-            <Text style={{ fontSize: 32, marginBottom: 12 }}>🎁</Text>
+            <Text style={{ fontSize: 30, marginBottom: 10 }}>🎁</Text>
             <Text style={styles.modalTitle}>후보 A를 선택했습니다.</Text>
-            <Text style={styles.modalDesc}>상대방에게는{'\n'}선물이 결정될 때까지 비밀입니다.</Text>
+            <Text style={styles.modalDesc}>상대방에게는{'\n'}상품명이 공개되지 않습니다.</Text>
             <Button
               title="선물 전달하기"
               full
@@ -104,37 +103,30 @@ export default function AIDetail({ navigate }) {
 
 const styles = StyleSheet.create({
   productImg: {
-    width: 110,
-    height: 110,
-    backgroundColor: colors.accent1,
-    borderRadius: 16,
+    width: 120,
+    height: 100,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
-  productName: { textAlign: 'center', fontSize: 15, fontWeight: '700', marginBottom: 16, color: colors.text },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 10, marginTop: 16 },
-  checkRow: { flexDirection: 'row', gap: 5 },
-  checkMark: { color: colors.main, fontWeight: '700', fontSize: 13 },
-  checkText: { fontSize: 13, color: colors.text, flex: 1 },
-  divider: { height: 1, backgroundColor: colors.accent1, marginVertical: 12 },
-  scoreBox: { backgroundColor: colors.white, borderRadius: 12, paddingHorizontal: 14, marginBottom: 14 },
-  scoreRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.accent1,
+  productName: { textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.main, marginBottom: 20 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 10, textAlign: 'center' },
+  checkLine: { fontSize: 13, color: colors.text, textAlign: 'center' },
+  scoreRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 4 },
+  scoreLabel: { fontSize: 13, color: colors.titleSub, width: 50, textAlign: 'right' },
+  stars: { fontSize: 13, color: colors.main, letterSpacing: 1 },
+  box: {
+    borderWidth: 1,
+    borderColor: colors.main,
+    borderRadius: 16,
+    padding: 16,
   },
-  scoreLabel: { color: colors.textMuted, fontSize: 13 },
-  stars: { color: colors.main, fontSize: 12, letterSpacing: 1 },
-  aiBox: { backgroundColor: colors.accent1, borderRadius: 12, padding: 14 },
-  aiBoxText: { fontSize: 13, color: colors.text, lineHeight: 21 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', padding: 24 },
-  modal: { backgroundColor: colors.white, borderRadius: 20, padding: 28, width: '100%', maxWidth: 320, alignItems: 'center' },
+  boxText: { fontSize: 13, color: colors.text, lineHeight: 21, textAlign: 'center' },
+  considerLine: { fontSize: 13, color: colors.text, lineHeight: 21 },
+  modalOverlay: { flex: 1, backgroundColor: colors.modalOverlay, alignItems: 'center', justifyContent: 'center', padding: 24 },
+  modal: { backgroundColor: colors.accent1, borderRadius: 20, padding: 28, width: '100%', maxWidth: 320, alignItems: 'center' },
   modalClose: { position: 'absolute', top: 14, right: 14 },
   modalTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8, color: colors.text },
-  modalDesc: { fontSize: 13, color: colors.textMuted, lineHeight: 21, marginBottom: 20, textAlign: 'center' },
+  modalDesc: { fontSize: 13, color: colors.titleSub, lineHeight: 21, marginBottom: 20, textAlign: 'center' },
 });
