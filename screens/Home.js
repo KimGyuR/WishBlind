@@ -82,11 +82,21 @@ export default function Home({ navigate }) {
             <View style={{ gap: 12 }}>
               {history.map((item) => {
                 const statusInfo = getStatusInfo(item.status);
+                const handlePress = () => {
+                  global.currentSessionId = item.id;
+                  if (item.status === 'AI_RECOMMENDATIONS_DONE') {
+                    navigate('ai-results', { sessionId: item.id });
+                  } else if (['GIFT_SELECTED', 'PAYMENT_PENDING', 'PAYMENT_COMPLETED', 'DELIVERY_SCHEDULED', 'DELIVERY_COMPLETED', 'GIFT_OPENED'].includes(item.status)) {
+                    navigate('gift-delivery');
+                  } else if (['AWAITING_PREFERENCES', 'PREFERENCES_RECEIVED'].includes(item.status)) {
+                    navigate('gift-step4');
+                  }
+                };
                 return (
                   <TouchableOpacity
                     key={item.id}
                     style={styles.historyItem}
-                    onPress={() => (item.status === 'AI_RECOMMENDATIONS_DONE' ? navigate('ai-results') : null)}
+                    onPress={handlePress}
                   >
                     <View style={styles.historyTopRow}>
                       <Text style={[styles.statusText, { color: statusInfo.color }]}>

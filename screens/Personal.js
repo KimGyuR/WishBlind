@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Header, Button, ProfileIcon } from '../components/Shared';
 import { colors } from '../theme';
-import { getUser, updateUser, authLogout } from '../services/api';
+import { getUser, updateUser, authLogout, clearTokens } from '../services/api';
 
 function ToggleRow({ label, value, onChange }) {
   return (
@@ -128,12 +128,15 @@ export default function Personal({ navigate }) {
         onPress: async () => {
           try {
             await authLogout();
+            clearTokens();
             global.userId = null;
             global.giftData = null;
             navigate('login');
           } catch (err) {
             console.error('Logout error:', err);
+            clearTokens();
             global.userId = null;
+            global.giftData = null;
             navigate('login');
           }
         },
