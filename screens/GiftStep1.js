@@ -3,11 +3,21 @@ import { View, ScrollView } from 'react-native';
 import { FakeStatusBar, Header, StepIndicator, Card, FormGroup, PillSelect, PillInput, Button } from '../components/Shared';
 
 export default function GiftStep1({ navigate }) {
-  const [relation, setRelation] = useState('');
-  const [anniversary, setAnniversary] = useState('');
-  const [budget, setBudget] = useState('');
-  const [category, setCategory] = useState('');
-  const [brand, setBrand] = useState('');
+  const [relation, setRelation] = useState(global.giftData?.relation || '');
+  const [anniversary, setAnniversary] = useState(global.giftData?.occasion || '');
+  const [budget, setBudget] = useState(global.giftData?.budgetRange || '');
+  const [category, setCategory] = useState(global.giftData?.category || '');
+  const [brand, setBrand] = useState(global.giftData?.brand || '');
+
+  const handleNext = () => {
+    global.giftData = global.giftData || {};
+    global.giftData.relationship = relation;
+    global.giftData.occasion = anniversary;
+    global.giftData.budgetRange = budget;
+    global.giftData.category = category;
+    global.giftData.brand = brand;
+    navigate('gift-step2');
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -54,7 +64,7 @@ export default function GiftStep1({ navigate }) {
           </FormGroup>
 
           <View style={{ alignItems: 'flex-end' }}>
-            <Button title="다음" onPress={() => navigate('gift-step2')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </ScrollView>

@@ -3,6 +3,8 @@ import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import Login from './screens/Login';
+import Signup from './screens/Signup';
+import SocialLoginWebView from './screens/SocialLoginWebView';
 import Home from './screens/Home';
 import GiftStep1 from './screens/GiftStep1';
 import GiftStep2 from './screens/GiftStep2';
@@ -18,6 +20,7 @@ import TasteComplete from './screens/TasteComplete';
 import AIResults from './screens/AIResults';
 import AIDetail from './screens/AIDetail';
 import GiftDelivery from './screens/GiftDelivery';
+import GiftPayment from './screens/GiftPayment';
 import Employee from './screens/Employee';
 import Personal from './screens/Personal';
 import ExperienceManagement from './screens/ExperienceManagement';
@@ -41,13 +44,15 @@ export default function App() {
 
   const screens = {
     login: <Login navigate={nav} />,
+    signup: <Signup navigate={nav} />,
+    socialLoginWebView: <SocialLoginWebView navigate={nav} route={{ params: global.routeParams?.['socialLoginWebView'] }} />,
     home: <Home navigate={nav} />,
     employee: <Employee navigate={nav} />,
     personal: <Personal navigate={nav} />,
     'experience-management': <ExperienceManagement navigate={nav} />,
     'experience-detail': <ExperienceDetail navigate={nav} route={{ params: global.routeParams?.['experience-detail'] }} />,
-    'experience-progress': <ExperienceProgress navigate={nav} />,
-    'experience-result': <ExperienceResult navigate={nav} />,
+    'experience-progress': <ExperienceProgress navigate={nav} route={{ params: global.routeParams?.['experience-progress'] }} />,
+    'experience-result': <ExperienceResult navigate={nav} route={{ params: global.routeParams?.['experience-result'] }} />,
     'gift-step1': <GiftStep1 navigate={nav} />,
     'gift-step2': <GiftStep2 navigate={nav} />,
     'gift-step3': <GiftStep3 navigate={nav} />,
@@ -60,9 +65,10 @@ export default function App() {
     'taste-5': <TasteTest5 navigate={nav} />,
     'taste-complete': <TasteComplete navigate={nav} isSender={false} />,
     'taste-complete-sender': <TasteComplete navigate={nav} isSender={true} />,
-    'ai-results': <AIResults navigate={nav} />,
-    'ai-detail': <AIDetail navigate={nav} />,
+    'ai-results': <AIResults navigate={nav} route={{ params: global.routeParams?.['ai-results'] }} />,
+    'ai-detail': <AIDetail navigate={nav} route={{ params: global.routeParams?.['ai-detail'] }} />,
     'gift-delivery': <GiftDelivery navigate={nav} />,
+    'gift-payment': <GiftPayment navigate={nav} route={{ params: global.routeParams?.['gift-payment'] }} />,
   };
 
   return (

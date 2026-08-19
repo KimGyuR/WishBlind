@@ -150,7 +150,7 @@ export function Chips({ options, selected, onToggle }) {
   );
 }
 
-export function Button({ title, onPress, variant = 'primary', full, style, textStyle }) {
+export function Button({ title, onPress, variant = 'primary', full, style, textStyle, disabled }) {
   return (
     <TouchableOpacity
       style={[
@@ -159,10 +159,12 @@ export function Button({ title, onPress, variant = 'primary', full, style, textS
         variant === 'secondary' && styles.btnSecondary,
         variant === 'outline' && styles.btnOutline,
         full && styles.btnFull,
+        disabled && styles.btnDisabled,
         style,
       ]}
       onPress={onPress}
       activeOpacity={0.8}
+      disabled={disabled}
     >
       <Text
         style={[
@@ -170,6 +172,7 @@ export function Button({ title, onPress, variant = 'primary', full, style, textS
           variant === 'primary' && styles.btnTextPrimary,
           variant === 'secondary' && styles.btnTextSecondary,
           variant === 'outline' && styles.btnTextOutline,
+          disabled && styles.btnTextDisabled,
           textStyle,
         ]}
       >
@@ -443,11 +446,13 @@ const styles = StyleSheet.create({
   btnPrimary: { backgroundColor: colors.main },
   btnSecondary: { backgroundColor: colors.accent1 },
   btnOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.main },
+  btnDisabled: { backgroundColor: '#ccc', opacity: 0.6 },
   btnFull: { width: '100%' },
   btnText: { fontSize: 16, fontWeight: '600' },
   btnTextPrimary: { color: colors.white },
   btnTextSecondary: { color: colors.main },
   btnTextOutline: { color: colors.main },
+  btnTextDisabled: { color: '#999' },
   btnRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 },
 
   logoWrap: { alignItems: 'center', paddingVertical: 20 },

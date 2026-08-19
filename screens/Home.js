@@ -1,15 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { FakeStatusBar, Button, LogoBlock, ProfileIcon } from '../components/Shared';
 import { colors } from '../theme';
+import { getGiftSessions } from '../services/api';
 
-const HISTORY = [
-  { id: 1, status: 'ai_done', title: '기념일 선물', sub: '멋쟁이 사자', statusLabel: 'AI 추천 완료', dot: '🟢', color: colors.green.text },
-  { id: 2, status: 'delivering', title: '취업 축하 선물', sub: '여자친구', statusLabel: '배송 준비 중', dot: '🔵', color: colors.blue.text },
-  { id: 3, status: 'waiting', title: '생일 선물', sub: '친구A', statusLabel: '취향 입력 대기', dot: '🟡', color: colors.yellow.text },
-];
+const getStatusInfo = (status) => {
+  const statusMap = {
+    AWAITING_PREFERENCES: { label: '취향 입력 대기', dot: '🟡', color: colors.yellow?.text || '#FFC107' },
+    PREFERENCES_RECEIVED: { label: '추천 대기 중', dot: '🔵', color: colors.blue?.text || '#2196F3' },
+    AI_RECOMMENDATIONS_DONE: { label: 'AI 추천 완료', dot: '🟢', color: colors.green?.text || '#4CAF50' },
+    GIFT_SELECTED: { label: '선물 선택 완료', dot: '✅', color: colors.green?.text || '#4CAF50' },
+    PAYMENT_PENDING: { label: '결제 대기 중', dot: '💳', color: '#FF9800' },
+    PAYMENT_COMPLETED: { label: '결제 완료', dot: '💰', color: colors.green?.text || '#4CAF50' },
+    DELIVERY_SCHEDULED: { label: '배송 준비 중', dot: '📦', color: colors.blue?.text || '#2196F3' },
+    DELIVERY_COMPLETED: { label: '배송 완료', dot: '✔️', color: colors.green?.text || '#4CAF50' },
+    GIFT_OPENED: { label: '선물 공개됨', dot: '🎉', color: colors.green?.text || '#4CAF50' },
+  };
+  return statusMap[status] || { label: status, dot: '❓', color: colors.text };
+};
 
 export default function Home({ navigate }) {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const userId = global.userId;
+
+  useEffect(() => {
+    loadGiftSessions();
+  }, []);
+
+  const loadGiftSessions = async () => {
+    try {
+      if (!userId) return;
+      const response = await getGiftSessions(userId);
+      if (response.code === 'SUCCESS' && response.data) {
+        setHistory(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to load gift sessions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
@@ -33,10 +65,10 @@ export default function Home({ navigate }) {
         <View style={styles.outerCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.cardTitle}>최근 진행한 선물</Text>
-            <Text style={styles.cardCount}>({HISTORY.length}건)</Text>
+            <Text style={styles.cardCount}>({history.length}건)</Text>
           </View>
 
-          {HISTORY.length === 0 ? (
+          {history.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>🎁</Text>
               <Text style={styles.emptyText}>
@@ -48,24 +80,27 @@ export default function Home({ navigate }) {
             </View>
           ) : (
             <View style={{ gap: 12 }}>
-              {HISTORY.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.historyItem}
-                  onPress={() => (item.status === 'ai_done' ? navigate('ai-results') : null)}
-                >
-                  <View style={styles.historyTopRow}>
-                    <Text style={[styles.statusText, { color: item.color }]}>
-                      {item.dot} {item.statusLabel}
-                    </Text>
-                    <Text style={styles.historyArrow}>›</Text>
-                  </View>
-                  <View style={styles.historyBottomRow}>
-                    <Text style={styles.historyTitle}>{item.title}</Text>
-                    <Text style={styles.historySub}>{item.sub}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {history.map((item) => {
+                const statusInfo = getStatusInfo(item.status);
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.historyItem}
+                    onPress={() => (item.status === 'AI_RECOMMENDATIONS_DONE' ? navigate('ai-results') : null)}
+                  >
+                    <View style={styles.historyTopRow}>
+                      <Text style={[styles.statusText, { color: statusInfo.color }]}>
+                        {statusInfo.dot} {statusInfo.label}
+                      </Text>
+                      <Text style={styles.historyArrow}>›</Text>
+                    </View>
+                    <View style={styles.historyBottomRow}>
+                      <Text style={styles.historyTitle}>{item.occasion || '선물'}</Text>
+                      <Text style={styles.historySub}>{item.relationship}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
         </View>

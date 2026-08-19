@@ -1,18 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, StyleSheet } from 'react-native';
+import { View, Text, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Header, StepIndicator, Card, Chips, PillInput, Button } from '../components/Shared';
 import { colors } from '../theme';
+import { submitPreferences } from '../services/api';
 
 const AVOIDS = ['큰 로고', '무거운 제품', '화려한 색상', '작은 수납공간', '관리가 어려운 소재', '특별히 없음'];
 
 export default function TasteTest5({ navigate }) {
-  const [selected, setSelected] = useState(['무거운 제품', '화려한 색상']);
-  const [extra, setExtra] = useState('');
+  const [selected, setSelected] = useState(global.tasteAnswers?.avoid || []);
+  const [extra, setExtra] = useState(global.tasteAnswers?.avoidEtc || '');
   const [showComplete, setShowComplete] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const toggle = (opt) => {
     setSelected((prev) => (prev.includes(opt) ? prev.filter((a) => a !== opt) : [...prev, opt]));
   };
+
+  const handleComplete = async () => {
+    setLoading(true);
+    try {
+      global.tasteAnswers = global.tasteAnswers || {};
+      global.tasteAnswers.avoid = selected;
+      global.tasteAnswers.avoidEtc = extra;
+
+      const inviteToken = global.inviteData?.token;
+      if (!inviteToken) {
+        Alert.alert('오류', '초대 정보가 없습니다');
+        return;
+      }
+
+      // API로 취향 제출
+      const response = await submitPreferences(inviteToken, {
+        colors: global.tasteAnswers.colors || [],
+        mood: global.tasteAnswers.mood || '',
+        material: global.tasteAnswers.material || '',
+        logoVisibility: global.tasteAnswers.logoVisibility || '',
+        size: global.tasteAnswers.size || '',
+        wearStyle: global.tasteAnswers.wearStyle || '',
+        avoid: selected,
+        avoidEtc: extra,
+      });
+
+      if (response.code === 'SUCCESS') {
+        setShowComplete(true);
+      } else {
+        Alert.alert('오류', response.message || '취향 제출에 실패했습니다');
+      }
+    } catch (err) {
+      Alert.alert('오류', err.message || '취향 제출 중 오류가 발생했습니다');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.main} />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -36,7 +83,7 @@ export default function TasteTest5({ navigate }) {
           />
 
           <View style={{ alignItems: 'flex-end', marginTop: 20 }}>
-            <Button title="입력 완료" onPress={() => setShowComplete(true)} />
+            <Button title="입력 완료" onPress={handleComplete} disabled={loading} />
           </View>
         </Card>
       </View>
@@ -56,6 +103,8 @@ export default function TasteTest5({ navigate }) {
               title="홈으로"
               onPress={() => {
                 setShowComplete(false);
+                global.tasteAnswers = null;
+                global.inviteData = null;
                 navigate('home');
               }}
             />
@@ -78,15 +127,13 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: colors.modalOverlay,
-    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 24,
   },
   completeCard: {
-    width: '100%',
-    maxWidth: 325,
-    backgroundColor: colors.accent1,
+    backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.cardBorder,
     borderRadius: 20,

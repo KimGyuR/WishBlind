@@ -1,23 +1,49 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Header } from '../components/Shared';
 import { colors } from '../theme';
+import { getRecommendations } from '../services/api';
 
-const CANDIDATES = [
-  {
-    id: 'a',
-    name: '후보 A 이름',
-    best: true,
-    match: 92,
-    stars: '★★★★★',
-    starLabel: '가장 추천',
-    tags: ['실용적인 선물', '블랙 취향 반영'],
-  },
-  { id: 'b', name: '후보 B 이름', best: false, match: 73 },
-  { id: 'c', name: '후보 C 이름', best: false, match: 67 },
-];
+export default function AIResults({ navigate, route }) {
+  const [candidates, setCandidates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const sessionId = route?.params?.sessionId || global.currentSessionId;
 
-export default function AIResults({ navigate }) {
+  useEffect(() => {
+    loadRecommendations();
+  }, []);
+
+  const loadRecommendations = async () => {
+    try {
+      const userId = global.userId;
+      if (!userId || !sessionId) {
+        Alert.alert('오류', '세션 정보가 없습니다');
+        navigate('home');
+        return;
+      }
+
+      const response = await getRecommendations(userId, sessionId);
+      if (response.code === 'SUCCESS' && response.data) {
+        const data = Array.isArray(response.data) ? response.data : [response.data];
+        setCandidates(data);
+      } else {
+        Alert.alert('오류', response.message || '추천 결과를 불러올 수 없습니다');
+      }
+    } catch (err) {
+      Alert.alert('오류', err.message || '추천 결과 조회 중 오류가 발생했습니다');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.main} />
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
@@ -26,34 +52,43 @@ export default function AIResults({ navigate }) {
 
         <Text style={styles.desc}>두 사람의 정보를 분석하여{'\n'}가장 적합한 후보를 찾았습니다.</Text>
 
-        {CANDIDATES.map((c) => (
-          <View key={c.id} style={{ marginBottom: 16 }}>
-            {c.best && <Text style={styles.bestLabel}>[BEST] {c.name}</Text>}
-            <View style={[styles.card, c.best && styles.cardBest]}>
-              <Text style={styles.cardName}>{c.best ? c.name : c.name}</Text>
-
-              {c.best ? (
-                <>
-                  <Text style={styles.stars}>
-                    {c.stars} <Text style={styles.starLabel}>{c.starLabel}</Text>
-                  </Text>
-                  <Text style={styles.matchText}>취향 일치 {c.match}%</Text>
-                  {c.tags.map((t) => (
-                    <Text key={t} style={styles.tagLine}>
-                      ✓ {t}
-                    </Text>
-                  ))}
-                </>
-              ) : (
-                <Text style={styles.matchText}>취향 일치 {c.match}%</Text>
-              )}
-
-              <TouchableOpacity onPress={() => navigate('ai-detail')}>
-                <Text style={styles.seeMore}>자세히 보기 ›</Text>
-              </TouchableOpacity>
-            </View>
+        {candidates.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>추천 결과가 없습니다</Text>
           </View>
-        ))}
+        ) : (
+          candidates.map((c, idx) => (
+            <View key={c.id || idx} style={{ marginBottom: 16 }}>
+              {idx === 0 && <Text style={styles.bestLabel}>[BEST] {c.productName}</Text>}
+              <View style={[styles.card, idx === 0 && styles.cardBest]}>
+                <Text style={styles.cardName}>{c.productName}</Text>
+
+                {idx === 0 ? (
+                  <>
+                    <Text style={styles.stars}>
+                      ★★★★★ <Text style={styles.starLabel}>가장 추천</Text>
+                    </Text>
+                    <Text style={styles.matchText}>취향 일치 {c.matchPercentage || 95}%</Text>
+                    {c.tags && c.tags.map((t) => (
+                      <Text key={t} style={styles.tagLine}>
+                        ✓ {t}
+                      </Text>
+                    ))}
+                  </>
+                ) : (
+                  <Text style={styles.matchText}>취향 일치 {c.matchPercentage || 80}%</Text>
+                )}
+
+                <TouchableOpacity onPress={() => {
+                  global.currentRecommendationId = c.id;
+                  navigate('ai-detail', { recommendationId: c.id });
+                }}>
+                  <Text style={styles.seeMore}>자세히 보기 ›</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -61,6 +96,8 @@ export default function AIResults({ navigate }) {
 
 const styles = StyleSheet.create({
   desc: { fontSize: 13, color: colors.stepDesc, textAlign: 'center', marginBottom: 20 },
+  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyText: { fontSize: 14, color: colors.textMuted },
   bestLabel: { fontSize: 13, fontWeight: '700', color: colors.main, marginBottom: 6, marginLeft: 4 },
   card: {
     borderWidth: 1,

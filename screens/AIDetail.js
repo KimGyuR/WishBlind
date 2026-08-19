@@ -1,26 +1,80 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Header, Button, BtnRow } from '../components/Shared';
 import { colors } from '../theme';
+import { getRecommendationDetail, finalizeGiftSession } from '../services/api';
 
-const AI_REASONS = [
-  '취업 축하 의미와 적합',
-  '블랙 선호 반영',
-  '심플한 디자인',
-  '예산 범위 만족',
-  '브랜드 이미지와 적합',
-];
-
-const SCORES = [
-  ['색상', '★★★★★'],
-  ['스타일', '★★★★☆'],
-  ['실용성', '★★★★★'],
-];
-
-const CONSIDER = ['사이즈가 약간 큽니다.', '체인 길이는 취향에 따라\n호불호가 있을 수 있습니다.'];
-
-export default function AIDetail({ navigate }) {
+export default function AIDetail({ navigate, route }) {
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+
+  const recommendationId = route?.params?.recommendationId || global.currentRecommendationId;
+  const sessionId = global.currentSessionId;
+
+  useEffect(() => {
+    loadDetail();
+  }, []);
+
+  const loadDetail = async () => {
+    try {
+      const userId = global.userId;
+      if (!userId || !recommendationId) {
+        Alert.alert('오류', '추천 정보가 없습니다');
+        navigate('ai-results');
+        return;
+      }
+
+      const response = await getRecommendationDetail(userId, recommendationId);
+      if (response.code === 'SUCCESS' && response.data) {
+        setDetail(response.data);
+      } else {
+        Alert.alert('오류', response.message || '추천 상세 정보를 불러올 수 없습니다');
+      }
+    } catch (err) {
+      Alert.alert('오류', err.message || '추천 상세 조회 중 오류가 발생했습니다');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectProduct = async () => {
+    if (!sessionId || !recommendationId) {
+      Alert.alert('오류', '필수 정보가 없습니다');
+      return;
+    }
+
+    setSelecting(true);
+    try {
+      const response = await finalizeGiftSession(global.userId, sessionId, recommendationId);
+      if (response.code === 'SUCCESS') {
+        setShowModal(true);
+      } else {
+        Alert.alert('오류', response.message || '상품 선택에 실패했습니다');
+      }
+    } catch (err) {
+      Alert.alert('오류', err.message || '상품 선택 중 오류가 발생했습니다');
+    } finally {
+      setSelecting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.main} />
+      </View>
+    );
+  }
+
+  if (!detail) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>정보를 불러올 수 없습니다</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -29,72 +83,96 @@ export default function AIDetail({ navigate }) {
         <Header title="AI 추천 상세" onBack={() => navigate('ai-results')} />
 
         <View style={styles.productImg}>
-          <Text style={styles.productEmoji}>🐱🐶</Text>
+          <Text style={styles.productEmoji}>{detail.productImage || '🎁'}</Text>
         </View>
 
-        <Text style={styles.productName}>후보 A 이름</Text>
+        <Text style={styles.productName}>{detail.productName}</Text>
+        {detail.brand && <Text style={styles.brand}>{detail.brand}</Text>}
 
         <View style={styles.divider} />
 
         <Text style={styles.sectionTitle}>AI 추천 이유</Text>
         <View style={{ marginBottom: 14, gap: 3 }}>
-          {AI_REASONS.map((r) => (
-            <Text key={r} style={styles.checkLine}>
-              ✓ {r}
-            </Text>
-          ))}
+          {detail.reasons ? (
+            Array.isArray(detail.reasons) ? (
+              detail.reasons.map((r) => (
+                <Text key={r} style={styles.checkLine}>
+                  ✓ {r}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.checkLine}>✓ {detail.reasons}</Text>
+            )
+          ) : (
+            <Text style={styles.checkLine}>✓ AI가 추천한 상품입니다</Text>
+          )}
         </View>
 
         <View style={styles.divider} />
 
-        <Text style={styles.sectionTitle}>취향 분석</Text>
-        <View style={{ marginBottom: 14 }}>
-          {SCORES.map(([label, stars]) => (
-            <View key={label} style={styles.scoreRow}>
-              <Text style={styles.scoreLabel}>{label}</Text>
-              <Text style={styles.stars}>{stars}</Text>
+        {detail.scores && detail.scores.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>취향 분석</Text>
+            <View style={{ marginBottom: 14 }}>
+              {detail.scores.map(([label, score]) => (
+                <View key={label} style={styles.scoreRow}>
+                  <Text style={styles.scoreLabel}>{label}</Text>
+                  <Text style={styles.stars}>{score}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
 
-        <View style={styles.divider} />
+            <View style={styles.divider} />
+          </>
+        )}
 
-        <Text style={styles.sectionTitle}>AI 코멘트</Text>
-        <View style={[styles.box, { marginBottom: 14 }]}>
-          <Text style={styles.boxText}>
-            취업을 축하하는 의미와{'\n'}
-            상대방이 선호하는 심플한 디자인을 고려했을 때{'\n'}
-            가장 적합한 추천입니다.
-          </Text>
-        </View>
+        {detail.aiComment && (
+          <>
+            <Text style={styles.sectionTitle}>AI 코멘트</Text>
+            <View style={[styles.box, { marginBottom: 14 }]}>
+              <Text style={styles.boxText}>{detail.aiComment}</Text>
+            </View>
 
-        <Text style={styles.sectionTitle}>고려할 점</Text>
-        <View style={[styles.box, { marginBottom: 20 }]}>
-          {CONSIDER.map((c) => (
-            <Text key={c} style={styles.considerLine}>
-              • {c}
-            </Text>
-          ))}
-        </View>
+            <View style={styles.divider} />
+          </>
+        )}
+
+        {detail.considerations && (
+          <>
+            <Text style={styles.sectionTitle}>고려할 점</Text>
+            <View style={[styles.box, { marginBottom: 20 }]}>
+              {Array.isArray(detail.considerations) ? (
+                detail.considerations.map((c) => (
+                  <Text key={c} style={styles.considerLine}>
+                    • {c}
+                  </Text>
+                ))
+              ) : (
+                <Text style={styles.considerLine}>• {detail.considerations}</Text>
+              )}
+            </View>
+          </>
+        )}
 
         <BtnRow>
-          <Button title="이전" onPress={() => navigate('ai-results')} />
-          <Button title="상품 선택" onPress={() => setShowModal(true)} />
+          <Button title="다시 보기" onPress={() => navigate('ai-results')} />
+          <Button title="이 상품 선택" onPress={handleSelectProduct} disabled={selecting} />
         </BtnRow>
       </ScrollView>
 
       <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
-            <TouchableOpacity style={styles.modalClose} onPress={() => setShowModal(false)}>
-              <Text style={{ fontSize: 16, color: colors.textMuted }}>✕</Text>
-            </TouchableOpacity>
-            <Text style={{ fontSize: 30, marginBottom: 10 }}>🎁</Text>
-            <Text style={styles.modalTitle}>후보 A를 선택했습니다.</Text>
-            <Text style={styles.modalDesc}>상대방에게는{'\n'}상품명이 공개되지 않습니다.</Text>
+        <View style={styles.overlay}>
+          <View style={styles.completeCard}>
+            <Text style={styles.icon}>🎉</Text>
+            <Text style={styles.title}>상품 선택 완료!</Text>
+            <Text style={styles.desc}>
+              선택하신 상품으로{'\n'}
+              선물이 결정되었습니다.{'\n\n'}
+              이제 배송 정보를 입력하고{'\n'}
+              결제를 진행해주세요.
+            </Text>
             <Button
-              title="선물 전달하기"
-              full
+              title="다음 단계"
               onPress={() => {
                 setShowModal(false);
                 navigate('gift-delivery');
@@ -108,38 +186,36 @@ export default function AIDetail({ navigate }) {
 }
 
 const styles = StyleSheet.create({
-  productImg: {
-    flexDirection: 'row',
-    width: 220,
-    height: 135,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 16,
-    backgroundColor: colors.white,
-  },
+  productImg: { height: 200, borderRadius: 16, backgroundColor: colors.accent1, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  productEmoji: { fontSize: 64 },
+  productName: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 4, textAlign: 'center' },
+  brand: { fontSize: 13, color: colors.titleSub, textAlign: 'center', marginBottom: 16 },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 14 },
-  productEmoji: { fontSize: 32 },
-  productName: { textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.main, marginBottom: 14 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 8, textAlign: 'center' },
-  checkLine: { fontSize: 13, color: colors.text, textAlign: 'center' },
-  scoreRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 4 },
-  scoreLabel: { fontSize: 13, color: colors.titleSub, width: 50, textAlign: 'right' },
-  stars: { fontSize: 13, color: colors.main, letterSpacing: 1 },
-  box: {
-    borderWidth: 1,
-    borderColor: colors.main,
-    borderRadius: 16,
-    padding: 16,
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 10 },
+  checkLine: { fontSize: 13, color: colors.text, lineHeight: 20 },
+  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  scoreLabel: { fontSize: 13, color: colors.titleSub },
+  stars: { fontSize: 13, color: colors.main },
+  box: { borderWidth: 1, borderColor: colors.main, borderRadius: 12, padding: 12, backgroundColor: colors.white },
+  boxText: { fontSize: 12, color: colors.text, lineHeight: 18 },
+  considerLine: { fontSize: 12, color: colors.text, lineHeight: 18, marginBottom: 6 },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  boxText: { fontSize: 13, color: colors.text, lineHeight: 21, textAlign: 'center' },
-  considerLine: { fontSize: 13, color: colors.text, lineHeight: 21 },
-  modalOverlay: { flex: 1, backgroundColor: colors.modalOverlay, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  modal: { backgroundColor: colors.accent1, borderRadius: 20, padding: 28, width: '100%', maxWidth: 320, alignItems: 'center' },
-  modalClose: { position: 'absolute', top: 14, right: 14 },
-  modalTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8, color: colors.text },
-  modalDesc: { fontSize: 13, color: colors.titleSub, lineHeight: 21, marginBottom: 20, textAlign: 'center' },
+  completeCard: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: 20,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  icon: { fontSize: 28, marginBottom: 12 },
+  title: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 20 },
+  desc: { fontSize: 13, color: '#595959', textAlign: 'center', lineHeight: 21, marginBottom: 24 },
 });

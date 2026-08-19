@@ -6,10 +6,16 @@ import { colors } from '../theme';
 const COLORS = ['브라운', '화이트', '베이지', '블랙', '그린', '상관없음', '컬러 포인트'];
 
 export default function TasteTest1({ navigate }) {
-  const [selected, setSelected] = useState(['브라운', '상관없음', '컬러 포인트']);
+  const [selected, setSelected] = useState(global.tasteAnswers?.colors || []);
 
   const toggle = (opt) => {
     setSelected((prev) => (prev.includes(opt) ? prev.filter((c) => c !== opt) : [...prev, opt]));
+  };
+
+  const handleNext = () => {
+    global.tasteAnswers = global.tasteAnswers || {};
+    global.tasteAnswers.colors = selected;
+    navigate('taste-2');
   };
 
   return (
@@ -32,7 +38,7 @@ export default function TasteTest1({ navigate }) {
           </View>
 
           <View style={{ alignItems: 'flex-end', marginTop: 20 }}>
-            <Button title="다음" onPress={() => navigate('taste-2')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </View>

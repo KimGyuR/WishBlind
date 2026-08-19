@@ -3,10 +3,19 @@ import { View, ScrollView } from 'react-native';
 import { FakeStatusBar, Header, StepIndicator, Card, FormGroup, PillSelect, PillInput, Button } from '../components/Shared';
 
 export default function GiftStep3({ navigate }) {
-  const [color, setColor] = useState('');
-  const [style, setStyle] = useState('');
-  const [avoid, setAvoid] = useState('');
-  const [wear, setWear] = useState('');
+  const [color, setColor] = useState(global.giftData?.colors?.[0] || '');
+  const [style, setStyle] = useState(global.giftData?.material || '');
+  const [avoid, setAvoid] = useState(global.giftData?.avoid?.join(', ') || '');
+  const [wear, setWear] = useState(global.giftData?.wearStyle || '');
+
+  const handleNext = () => {
+    global.giftData = global.giftData || {};
+    global.giftData.colors = color ? [color] : [];
+    global.giftData.material = style;
+    global.giftData.avoid = avoid ? avoid.split(',').map(a => a.trim()) : [];
+    global.giftData.wearStyle = wear;
+    navigate('gift-step4');
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -45,7 +54,7 @@ export default function GiftStep3({ navigate }) {
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <Button title="이전" onPress={() => navigate('gift-step2')} />
-            <Button title="다음" onPress={() => navigate('gift-step4')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </ScrollView>

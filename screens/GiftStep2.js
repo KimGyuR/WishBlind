@@ -7,8 +7,8 @@ const MOODS = ['실용적', '특별한', '기념용', '럭셔리', '감동적인
 const MAX_MOODS = 2;
 
 export default function GiftStep2({ navigate }) {
-  const [meaning, setMeaning] = useState('');
-  const [moods, setMoods] = useState(['특별한', '감동적인']);
+  const [meaning, setMeaning] = useState(global.giftData?.meaning || '');
+  const [moods, setMoods] = useState(global.giftData?.moods || []);
 
   const toggleMood = (opt) => {
     setMoods((prev) => {
@@ -16,6 +16,13 @@ export default function GiftStep2({ navigate }) {
       if (prev.length >= MAX_MOODS) return prev;
       return [...prev, opt];
     });
+  };
+
+  const handleNext = () => {
+    global.giftData = global.giftData || {};
+    global.giftData.meaning = meaning;
+    global.giftData.moods = moods;
+    navigate('gift-step3');
   };
 
   return (
@@ -44,7 +51,7 @@ export default function GiftStep2({ navigate }) {
 
           <View style={styles.btnRow}>
             <Button title="이전" onPress={() => navigate('gift-step1')} />
-            <Button title="다음" onPress={() => navigate('gift-step3')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </ScrollView>

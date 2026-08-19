@@ -1,66 +1,109 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Button } from '../components/Shared';
 import { colors } from '../theme';
+import { submitFittingResult } from '../services/api';
 
-export default function ExperienceResult({ navigate }) {
-  const [stage, setStage] = useState('step04'); // 'step04' -> 'result' -> 'complete'
-  const [impression, setImpression] = useState('positive');
+export default function ExperienceResult({ navigate, route }) {
+  const [stage, setStage] = useState('evaluation');
+  const [impression, setImpression] = useState('');
+  const [memo, setMemo] = useState('');
+  const [satisfactionScore, setSatisfactionScore] = useState(5);
   const [showComplete, setShowComplete] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [resultData, setResultData] = useState({
-    texture: '부드러운 가죽 선호',
-    size: 'Small 선호',
-    color: '밝은 우즉',
-    weight: '가벼운 제품 선호',
-    memo: '스트럴이 길고 가벼운 제품에 금정적인 반응을 보임.',
-  });
+  const reservationId = route?.params?.reservationId;
+  const fittingData = route?.params?.fittingData || {};
 
   const impressionOptions = [
-    { key: 'light', label: '따운 인상' },
-    { key: 'confident', label: '단호' },
-    { key: 'soft', label: '보음' },
+    { key: 'positive', label: '긍정적' },
+    { key: 'confident', label: '자신감 있음' },
+    { key: 'neutral', label: '중립' },
     { key: 'dislike', label: '선호하지 않음' },
   ];
 
   const handleNextStep = () => {
-    if (stage === 'step04') {
+    if (stage === 'evaluation') {
+      if (!impression) {
+        Alert.alert('오류', '인상을 선택해주세요');
+        return;
+      }
       setStage('result');
     } else if (stage === 'result') {
-      setShowComplete(true);
+      submitResult();
+    }
+  };
+
+  const submitResult = async () => {
+    setLoading(true);
+    try {
+      if (!reservationId) {
+        Alert.alert('오류', '예약 정보가 없습니다');
+        return;
+      }
+
+      const response = await submitFittingResult(reservationId, {
+        materialFeel: fittingData.material || '',
+        sizeFeel: fittingData.size || '',
+        storageFeel: fittingData.storage || '',
+        wearComfort: fittingData.wear || '',
+        weight: fittingData.weight || '',
+        overallSatisfaction: satisfactionScore,
+        staffMemo: memo,
+        impression,
+      });
+
+      if (response.code === 'SUCCESS') {
+        setShowComplete(true);
+      } else {
+        Alert.alert('오류', response.message || '결과 저장에 실패했습니다');
+      }
+    } catch (err) {
+      Alert.alert('오류', err.message || '결과 저장 중 오류가 발생했습니다');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePrevStep = () => {
     if (stage === 'result') {
-      setStage('step04');
+      setStage('evaluation');
     }
   };
 
   const handleComplete = () => {
+    setShowComplete(false);
     navigate('experience-management');
   };
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={colors.main} />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('experience-detail')}>
+          <TouchableOpacity onPress={() => navigate('experience-progress')}>
             <Text style={styles.backButton}>←</Text>
           </TouchableOpacity>
           <Text style={styles.title}>
-            {stage === 'step04' ? '체험 결과 확인' : '취향 결과 확인'}
+            {stage === 'evaluation' ? '체험 평가' : '결과 확인'}
           </Text>
           <View style={{ width: 24 }} />
         </View>
 
-        {/* STEP 04: 전체 인상 선택 */}
-        {stage === 'step04' && (
+        {/* STAGE 1: 평가 */}
+        {stage === 'evaluation' && (
           <View style={styles.content}>
-            <Text style={styles.stepLabel}>STEP 04</Text>
+            <Text style={styles.stepLabel}>최종 평가</Text>
             <Text style={styles.stepDescription}>
-              고객의 전체의 관종을 선태해주세요.
+              체험에 대한 종합 평가를 작성해주세요.
             </Text>
 
             <Text style={styles.sectionTitle}>전체적인 인상</Text>
@@ -85,141 +128,114 @@ export default function ExperienceResult({ navigate }) {
               ))}
             </View>
 
+            <Text style={styles.sectionTitle}>만족도 점수</Text>
+            <View style={styles.scoreContainer}>
+              {[1, 2, 3, 4, 5].map((score) => (
+                <TouchableOpacity
+                  key={score}
+                  style={[
+                    styles.scoreButton,
+                    satisfactionScore === score && styles.scoreButtonActive,
+                  ]}
+                  onPress={() => setSatisfactionScore(score)}
+                >
+                  <Text
+                    style={[
+                      styles.scoreText,
+                      satisfactionScore === score && styles.scoreTextActive,
+                    ]}
+                  >
+                    {score}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <Text style={styles.sectionTitle}>추가 메모</Text>
             <View style={styles.memoInput}>
               <TextInput
                 style={styles.memoText}
                 multiline
-                placeholder="스타일이 간 제품을 더 편하게 누가는 것으로 평되임"
-                placeholderTextColor={colors.subtitle}
+                placeholder="체험 중 관찰한 내용을 입력하세요"
+                placeholderTextColor={colors.titleSub}
+                value={memo}
+                onChangeText={setMemo}
               />
             </View>
 
             <View style={styles.buttonGroup}>
               <Button
                 title="이전"
-                variant="secondary"
-                onPress={handlePrevStep}
+                variant="outline"
                 style={{ flex: 1 }}
+                onPress={() => navigate('experience-progress')}
               />
               <Button
-                title="다음"
+                title="결과 확인"
+                style={{ flex: 1, marginLeft: 8 }}
                 onPress={handleNextStep}
-                style={{ flex: 1 }}
               />
             </View>
           </View>
         )}
 
-        {/* 취향 결과 확인 */}
+        {/* STAGE 2: 결과 확인 */}
         {stage === 'result' && (
           <View style={styles.content}>
-            <Text style={styles.resultDescription}>
-              김사자 고객님의 위한 권고을 확인해세요.
+            <Text style={styles.stepLabel}>체험 결과</Text>
+            <Text style={styles.stepDescription}>
+              입력하신 내용을 확인해주세요.
             </Text>
 
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>소재</Text>
-              <View style={styles.resultInputBox}>
-                <TextInput
-                  style={styles.resultInputText}
-                  value={resultData.texture}
-                  onChangeText={(text) =>
-                    setResultData({ ...resultData, texture: text })
-                  }
-                />
+            <View style={styles.resultCard}>
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>전체 인상</Text>
+                <Text style={styles.resultValue}>
+                  {impressionOptions.find(o => o.key === impression)?.label || '-'}
+                </Text>
               </View>
-            </View>
-
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>크기</Text>
-              <View style={styles.resultInputBox}>
-                <TextInput
-                  style={styles.resultInputText}
-                  value={resultData.size}
-                  onChangeText={(text) =>
-                    setResultData({ ...resultData, size: text })
-                  }
-                />
+              <View style={styles.resultRow}>
+                <Text style={styles.resultLabel}>만족도</Text>
+                <Text style={styles.resultValue}>⭐ {satisfactionScore}/5</Text>
               </View>
-            </View>
-
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>색상감</Text>
-              <View style={styles.resultInputBox}>
-                <TextInput
-                  style={styles.resultInputText}
-                  value={resultData.color}
-                  onChangeText={(text) =>
-                    setResultData({ ...resultData, color: text })
-                  }
-                />
-              </View>
-            </View>
-
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>무게</Text>
-              <View style={styles.resultInputBox}>
-                <TextInput
-                  style={styles.resultInputText}
-                  value={resultData.weight}
-                  onChangeText={(text) =>
-                    setResultData({ ...resultData, weight: text })
-                  }
-                />
-              </View>
-            </View>
-
-            <View style={styles.resultItem}>
-              <Text style={styles.resultLabel}>직원 메모</Text>
-              <View style={styles.resultInputBox}>
-                <TextInput
-                  style={[styles.resultInputText, styles.resultMemoInput]}
-                  value={resultData.memo}
-                  onChangeText={(text) =>
-                    setResultData({ ...resultData, memo: text })
-                  }
-                  multiline
-                />
-              </View>
+              {memo && (
+                <View style={styles.resultRow}>
+                  <Text style={styles.resultLabel}>메모</Text>
+                  <Text style={styles.resultValue}>{memo}</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.buttonGroup}>
               <Button
-                title="수정하기"
-                variant="secondary"
-                onPress={handlePrevStep}
+                title="수정"
+                variant="outline"
                 style={{ flex: 1 }}
+                onPress={handlePrevStep}
               />
               <Button
-                title="완료"
+                title="저장 및 완료"
+                style={{ flex: 1, marginLeft: 8 }}
                 onPress={handleNextStep}
-                style={{ flex: 1 }}
               />
             </View>
           </View>
         )}
-
-        {/* 완료 팝업 */}
-        <Modal visible={showComplete} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.checkmark}>
-                <Text style={styles.checkmarkText}>✓</Text>
-              </View>
-              <Text style={styles.completeTitle}>체험이 완료되었습니다.</Text>
-              <Text style={styles.completeDescription}>
-                실시간 김사자 고객가 AI 추천 정보에 반영됩니다.
-              </Text>
-              <Button
-                title="확인"
-                onPress={handleComplete}
-                style={{ marginTop: 24 }}
-              />
-            </View>
-          </View>
-        </Modal>
       </ScrollView>
+
+      <Modal visible={showComplete} transparent animationType="fade" onRequestClose={handleComplete}>
+        <View style={styles.overlay}>
+          <View style={styles.completeCard}>
+            <Text style={styles.icon}>✅</Text>
+            <Text style={styles.completeTitle}>체험 기록 완료!</Text>
+            <Text style={styles.completeDesc}>
+              고객님의 체험 정보가{'\n'}
+              성공적으로 저장되었습니다.
+            </Text>
+            <Button title="확인" onPress={handleComplete} />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -231,161 +247,80 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 16,
-    marginBottom: 20,
   },
-  backButton: {
-    fontSize: 18,
-    color: colors.main,
-    fontWeight: '600',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  content: {
-    marginBottom: 24,
-  },
-  stepLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.main,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  stepDescription: {
-    fontSize: 14,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  resultDescription: {
-    fontSize: 14,
-    color: colors.subtitle,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-    marginTop: 16,
-  },
-  optionGroup: {
-    gap: 8,
-  },
+  backButton: { fontSize: 26, color: colors.text, lineHeight: 26 },
+  title: { fontSize: 17, fontWeight: '700', color: colors.text },
+  content: { marginBottom: 20 },
+  stepLabel: { fontSize: 13, fontWeight: '700', color: colors.main, marginBottom: 4 },
+  stepDescription: { fontSize: 14, color: colors.text, marginBottom: 20, fontWeight: '500' },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 12, marginTop: 16 },
+  optionGroup: { gap: 8, marginBottom: 16 },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: colors.accent1,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: colors.border,
-  },
-  optionSelected: {
+    borderColor: colors.main,
+    borderRadius: 12,
     backgroundColor: colors.white,
+  },
+  optionSelected: { backgroundColor: colors.accent1 },
+  optionRadio: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: colors.main, marginRight: 10 },
+  optionRadioSelected: { backgroundColor: colors.main, borderColor: colors.main },
+  optionText: { fontSize: 13, color: colors.text, fontWeight: '500' },
+  scoreContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 16 },
+  scoreButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
     borderColor: colors.main,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.white,
   },
-  optionRadio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.border,
-    marginRight: 12,
-  },
-  optionRadioSelected: {
-    borderColor: colors.main,
-    backgroundColor: colors.main,
-  },
-  optionText: {
-    fontSize: 13,
-    color: colors.text,
-    fontWeight: '500',
-  },
+  scoreButtonActive: { backgroundColor: colors.main },
+  scoreText: { fontSize: 14, fontWeight: '700', color: colors.main },
+  scoreTextActive: { color: colors.white },
   memoInput: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
-    padding: 12,
-    minHeight: 80,
-  },
-  memoText: {
-    fontSize: 13,
-    color: colors.text,
-    textAlignVertical: 'top',
-  },
-  resultItem: {
-    marginBottom: 16,
-  },
-  resultLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  resultInputBox: {
-    backgroundColor: colors.white,
+    borderColor: colors.main,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.white,
+    minHeight: 100,
     paddingHorizontal: 14,
     paddingVertical: 12,
+    marginBottom: 16,
   },
-  resultInputText: {
-    fontSize: 13,
-    color: colors.text,
+  memoText: { fontSize: 13, color: colors.text },
+  resultCard: {
+    backgroundColor: colors.accent1,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    marginTop: 16,
   },
-  resultMemoInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  modalOverlay: {
+  resultRow: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  resultRow: { paddingVertical: 10, flexDirection: 'row', justifyContent: 'space-between' },
+  resultLabel: { fontSize: 13, color: colors.titleSub, fontWeight: '500' },
+  resultValue: { fontSize: 13, color: colors.text, fontWeight: '600' },
+  buttonGroup: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 20 },
+  overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  modalContent: {
-    backgroundColor: colors.accent1,
+  completeCard: {
+    backgroundColor: colors.bg,
     borderRadius: 20,
-    padding: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    maxWidth: 300,
   },
-  checkmark: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  checkmarkText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.main,
-  },
-  completeTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  completeDescription: {
-    fontSize: 13,
-    color: colors.subtitle,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  icon: { fontSize: 40, marginBottom: 16 },
+  completeTitle: { fontSize: 20, fontWeight: '700', color: colors.text, marginBottom: 12 },
+  completeDesc: { fontSize: 13, color: colors.titleSub, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
 });
