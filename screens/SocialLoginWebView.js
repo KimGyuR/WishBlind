@@ -3,7 +3,7 @@ import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import WebView from 'react-native-webview';
 import { FakeStatusBar } from '../components/Shared';
 import { colors } from '../theme';
-import { setTokens } from '../services/api';
+import { setTokens, decodeUserIdFromToken } from '../services/api';
 
 const BASE_URL = 'https://wishblind-backend-production.up.railway.app';
 
@@ -78,14 +78,14 @@ export default function SocialLoginWebView({ navigate, route }) {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || `${provider} 로그인에 실패했습니다`);
+      if (!response.ok || data.success === false) {
+        throw new Error(data?.error?.message || `${provider} 로그인에 실패했습니다`);
       }
 
-      if (data.code === 'SUCCESS' && data.data) {
-        const { accessToken, refreshToken, userId } = data.data;
+      if (data.success && data.data) {
+        const { accessToken, refreshToken } = data.data;
         setTokens(accessToken, refreshToken);
-        global.userId = userId;
+        global.userId = decodeUserIdFromToken(accessToken);
 
         Alert.alert('성공', `${provider}로 로그인되었습니다`, [
           { text: '확인', onPress: () => navigate('home') }

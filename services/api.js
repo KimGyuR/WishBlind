@@ -15,6 +15,51 @@ export const clearTokens = () => {
   refreshToken = null;
 };
 
+// 서버는 로그인/회원가입 응답에 userId를 내려주지 않으므로
+// accessToken(JWT)의 sub 클레임에서 직접 추출한다.
+const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+const base64UrlDecode = (input) => {
+  const b64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  let output = '';
+  let buffer = 0;
+  let bits = 0;
+  for (const char of b64) {
+    if (char === '=') break;
+    const idx = BASE64_CHARS.indexOf(char);
+    if (idx === -1) continue;
+    buffer = (buffer << 6) | idx;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      output += String.fromCharCode((buffer >> bits) & 0xff);
+    }
+  }
+  return output;
+};
+
+export const decodeUserIdFromToken = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    const json = JSON.parse(decodeURIComponent(escape(base64UrlDecode(payload))));
+    return json.sub != null ? Number(json.sub) : null;
+  } catch (err) {
+    console.error('토큰 파싱 실패:', err);
+    return null;
+  }
+};
+
+// 서버 응답은 {success, data, error:{code,message}} 형태로 내려온다.
+// 화면 코드는 {code:'SUCCESS', data} 형태를 기대하므로 여기서 맞춰준다.
+const normalizeResponse = (endpoint, status, raw) => {
+  if (!raw || raw.success === false) {
+    const message = raw?.error?.message || `HTTP ${status}`;
+    console.error('API Error:', { status, endpoint, code: raw?.error?.code, message });
+    throw new Error(message);
+  }
+  return { code: 'SUCCESS', data: raw.data };
+};
+
 const fetchWithAuth = async (endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -32,18 +77,22 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     });
 
     const data = await response.json();
+    return normalizeResponse(endpoint, response.status, data);
+  } catch (err) {
+    console.error('Fetch error:', err);
+    throw err;
+  }
+};
 
-    if (!response.ok) {
-      console.error('API Error:', {
-        status: response.status,
-        endpoint: endpoint,
-        message: data.message,
-        data: data,
-      });
-      throw new Error(data.message || `HTTP ${response.status}: ${data.error || 'Unknown error'}`);
-    }
+const fetchPublic = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+    });
 
-    return data;
+    const data = await response.json();
+    return normalizeResponse(endpoint, response.status, data);
   } catch (err) {
     console.error('Fetch error:', err);
     throw err;
@@ -126,24 +175,22 @@ export const getRecommendationDetail = (userId, recommendationId) =>
 
 // ===== Invite (Recipient) =====
 export const getInviteInfo = (token) =>
-  fetch(`${BASE_URL}/api/invite/${token}`).then(r => r.json());
+  fetchPublic(`/api/invite/${token}`);
 
 export const verifyInviteCode = (code) =>
-  fetch(`${BASE_URL}/api/invite/verify`, {
+  fetchPublic('/api/invite/verify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
-  }).then(r => r.json());
+  });
 
 export const getTasteForm = (token) =>
-  fetch(`${BASE_URL}/api/invite/${token}/taste-form`).then(r => r.json());
+  fetchPublic(`/api/invite/${token}/taste-form`);
 
 export const submitPreferences = (token, preferences) =>
-  fetch(`${BASE_URL}/api/invite/${token}/preferences`, {
+  fetchPublic(`/api/invite/${token}/preferences`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(preferences),
-  }).then(r => r.json());
+  });
 
 // ===== Delivery =====
 export const setDelivery = (userId, sessionId, deliveryData) =>
@@ -161,7 +208,7 @@ export const completeDelivery = (userId, sessionId) =>
   });
 
 export const revealGift = (token) =>
-  fetch(`${BASE_URL}/api/invite/${token}/reveal`).then(r => r.json());
+  fetchPublic(`/api/invite/${token}/reveal`);
 
 // ===== Payment =====
 export const preparePayment = (sessionId) =>
@@ -223,11 +270,11 @@ export const getProducts = (category) => {
   const url = category
     ? `/api/products?category=${encodeURIComponent(category)}`
     : '/api/products';
-  return fetch(`${BASE_URL}${url}`).then(r => r.json());
+  return fetchPublic(url);
 };
 
 export const getProduct = (productId) =>
-  fetch(`${BASE_URL}/api/products/${productId}`).then(r => r.json());
+  fetchPublic(`/api/products/${productId}`);
 
 // ===== Store Fitting (Employee) =====
 export const createFitting = (data) =>

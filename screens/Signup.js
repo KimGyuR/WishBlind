@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { FakeStatusBar, UnderlineInput, Button, LogoBlock } from '../components/Shared';
 import { colors } from '../theme';
-import { authSignup, setTokens } from '../services/api';
+import { authSignup, setTokens, decodeUserIdFromToken } from '../services/api';
 
 export default function Signup({ navigate }) {
   const [email, setEmail] = useState('');
@@ -57,15 +57,19 @@ export default function Signup({ navigate }) {
     try {
       console.log('회원가입 시도:', { email, nickname });
 
-      // authSignup은 phone과 terms를 내부적으로 처리합니다
-      const response = await authSignup(email, password, nickname, phone, []);
+      // 약관 동의 체크박스 하나로 필수 약관(서비스 이용약관, 개인정보 처리방침) 동의를 함께 처리
+      const terms = [
+        { termsType: 'SERVICE', version: '1.0', agreed: true },
+        { termsType: 'PRIVACY', version: '1.0', agreed: true },
+      ];
+      const response = await authSignup(email, password, nickname, phone, terms);
 
       console.log('회원가입 응답:', response);
 
       if (response.code === 'SUCCESS' && response.data) {
-        const { accessToken, refreshToken, userId } = response.data;
+        const { accessToken, refreshToken } = response.data;
         setTokens(accessToken, refreshToken);
-        global.userId = userId;
+        global.userId = decodeUserIdFromToken(accessToken);
         Alert.alert('성공', '회원가입이 완료되었습니다', [
           { text: '확인', onPress: () => navigate('home') }
         ]);

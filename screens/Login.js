@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { FakeStatusBar, UnderlineInput, Button, LogoBlock } from '../components/Shared';
 import { colors } from '../theme';
-import { authLogin, setTokens } from '../services/api';
+import { authLogin, setTokens, decodeUserIdFromToken } from '../services/api';
 
 export default function Login({ navigate }) {
   const [id, setId] = useState('');
@@ -16,7 +16,7 @@ export default function Login({ navigate }) {
     setError('');
 
     if (!id.trim() || !pw.trim()) {
-      setError('아이디와 비밀번호를 입력해주세요');
+      setError('이메일과 비밀번호를 입력해주세요');
       return;
     }
 
@@ -24,9 +24,9 @@ export default function Login({ navigate }) {
     try {
       const response = await authLogin(id, pw);
       if (response.code === 'SUCCESS' && response.data) {
-        const { accessToken, refreshToken, userId } = response.data;
+        const { accessToken, refreshToken } = response.data;
         setTokens(accessToken, refreshToken);
-        global.userId = userId;
+        global.userId = decodeUserIdFromToken(accessToken);
         navigate('home');
       } else {
         setError(response.message || '로그인에 실패했습니다');
@@ -57,12 +57,12 @@ export default function Login({ navigate }) {
         <LogoBlock style={{ marginBottom: 32, marginTop: 20 }} />
 
         <View style={{ marginBottom: 16 }}>
-          <Text style={styles.label}>아이디</Text>
+          <Text style={styles.label}>이메일</Text>
           <View style={styles.inputRow}>
             <UnderlineInput
               value={id}
               onChangeText={setId}
-              placeholder="아이디를 입력해주세요"
+              placeholder="이메일을 입력해주세요"
               style={{ paddingRight: 32 }}
             />
             {!!id && (

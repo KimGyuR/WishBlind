@@ -4,6 +4,25 @@ import { FakeStatusBar, Header, StepIndicator, Card, Button } from '../component
 import { colors } from '../theme';
 import { createGiftSession, createInvite } from '../services/api';
 
+// GiftStep1/2/3에서 한글 라벨로 수집한 값을 서버가 기대하는 형태로 변환한다.
+const MOOD_ENUM = {
+  '실용적': 'PRACTICAL',
+  '특별한': 'SPECIAL',
+  '기념용': 'COMMEMORATIVE',
+  '럭셔리': 'LUXURY',
+  '감동적인': 'TOUCHING',
+  '기타': 'ETC',
+};
+
+const BUDGET_RANGES = {
+  '3만원 이하': { min: 0, max: 30000 },
+  '3~5만원': { min: 30000, max: 50000 },
+  '5~10만원': { min: 50000, max: 100000 },
+  '10~20만원': { min: 100000, max: 200000 },
+  '20~50만원': { min: 200000, max: 500000 },
+  '50만원 이상': { min: 500000, max: 3000000 },
+};
+
 export default function GiftStep4({ navigate }) {
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState('');
@@ -25,17 +44,29 @@ export default function GiftStep4({ navigate }) {
         return;
       }
 
+      const budget = BUDGET_RANGES[data.budgetRange] || { min: 0, max: 0 };
+      const moods = (data.moods || []).map((m) => MOOD_ENUM[m]).filter(Boolean);
+      const hasKnownTaste = (data.colors && data.colors.length) || data.material || (data.avoid && data.avoid.length) || data.wearStyle;
+      const giverKnownTaste = hasKnownTaste
+        ? {
+            colors: (data.colors || []).join(','),
+            style: data.material || '',
+            avoid: (data.avoid || []).join(','),
+            wearStyle: data.wearStyle || '',
+          }
+        : undefined;
+
       // API로 선물 세션 생성
       const sessionResponse = await createGiftSession(userId, {
         relationship: data.relationship,
         occasion: data.occasion,
-        budgetMin: 0,
-        budgetMax: 0,
+        budgetMin: budget.min,
+        budgetMax: budget.max,
         category: data.category,
         brand: data.brand,
         meaning: data.meaning,
-        moods: data.moods,
-        giverKnownTaste: false,
+        moods,
+        giverKnownTaste,
       });
 
       if (sessionResponse.code === 'SUCCESS' && sessionResponse.data) {
