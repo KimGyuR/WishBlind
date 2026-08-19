@@ -95,6 +95,7 @@ export default function Home({ navigate }) {
                     key={item.id}
                     style={styles.historyItem}
                     onPress={() => {
+                      global.currentSessionId = item.id;
                       if (isViewable(item.status)) {
                         navigate('ai-results', { sessionId: item.id });
                       } else {
