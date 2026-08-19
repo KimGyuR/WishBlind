@@ -29,13 +29,15 @@ export default function AIDetail({ navigate }) {
         <Header title="AI 추천 상세" onBack={() => navigate('ai-results')} />
 
         <View style={styles.productImg}>
-          <Text style={{ fontSize: 48 }}>🐱🐶</Text>
+          <Text style={styles.productEmoji}>🐱🐶</Text>
         </View>
 
         <Text style={styles.productName}>후보 A 이름</Text>
 
+        <View style={styles.divider} />
+
         <Text style={styles.sectionTitle}>AI 추천 이유</Text>
-        <View style={{ marginBottom: 20, gap: 5 }}>
+        <View style={{ marginBottom: 14, gap: 3 }}>
           {AI_REASONS.map((r) => (
             <Text key={r} style={styles.checkLine}>
               ✓ {r}
@@ -43,8 +45,10 @@ export default function AIDetail({ navigate }) {
           ))}
         </View>
 
+        <View style={styles.divider} />
+
         <Text style={styles.sectionTitle}>취향 분석</Text>
-        <View style={{ marginBottom: 20 }}>
+        <View style={{ marginBottom: 14 }}>
           {SCORES.map(([label, stars]) => (
             <View key={label} style={styles.scoreRow}>
               <Text style={styles.scoreLabel}>{label}</Text>
@@ -53,8 +57,10 @@ export default function AIDetail({ navigate }) {
           ))}
         </View>
 
+        <View style={styles.divider} />
+
         <Text style={styles.sectionTitle}>AI 코멘트</Text>
-        <View style={[styles.box, { marginBottom: 20 }]}>
+        <View style={[styles.box, { marginBottom: 14 }]}>
           <Text style={styles.boxText}>
             취업을 축하하는 의미와{'\n'}
             상대방이 선호하는 심플한 디자인을 고려했을 때{'\n'}
@@ -63,7 +69,7 @@ export default function AIDetail({ navigate }) {
         </View>
 
         <Text style={styles.sectionTitle}>고려할 점</Text>
-        <View style={[styles.box, { marginBottom: 24 }]}>
+        <View style={[styles.box, { marginBottom: 20 }]}>
           {CONSIDER.map((c) => (
             <Text key={c} style={styles.considerLine}>
               • {c}
@@ -103,15 +109,22 @@ export default function AIDetail({ navigate }) {
 
 const styles = StyleSheet.create({
   productImg: {
-    width: 120,
-    height: 100,
+    flexDirection: 'row',
+    width: 220,
+    height: 135,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    backgroundColor: colors.white,
   },
-  productName: { textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.main, marginBottom: 20 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 10, textAlign: 'center' },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 14 },
+  productEmoji: { fontSize: 32 },
+  productName: { textAlign: 'center', fontSize: 16, fontWeight: '700', color: colors.main, marginBottom: 14 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.text, marginBottom: 8, textAlign: 'center' },
   checkLine: { fontSize: 13, color: colors.text, textAlign: 'center' },
   scoreRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 4 },
   scoreLabel: { fontSize: 13, color: colors.titleSub, width: 50, textAlign: 'right' },
