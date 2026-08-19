@@ -1,13 +1,60 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { FakeStatusBar, Button } from '../components/Shared';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { FakeStatusBar, Header, StepIndicator, Card, PillInput, Button } from '../components/Shared';
 import { colors } from '../theme';
+
+const CANDIDATES = ['후보 A', '후보 B', '후보 C'];
+const MATERIAL_SCALE = ['매우 좋음', '좋음', '보통', '불만족', '매우 불만족'];
+const SIZES = ['Small', 'Medium', 'Large'];
+const STORAGE = ['충분함', '보통', '부족함'];
+const WEAR = ['매우 편함', '편함', '보통', '불편함'];
+const WEIGHT = ['가벼움', '적당함', '무거움'];
+
+function RadioGroup({ options, value, onChange }) {
+  return (
+    <View style={styles.optionGroup}>
+      {options.map((opt) => (
+        <TouchableOpacity
+          key={opt}
+          style={[styles.option, value === opt && styles.optionSelected]}
+          onPress={() => onChange(opt)}
+        >
+          <View style={[styles.optionRadio, value === opt && styles.optionRadioSelected]} />
+          <Text style={styles.optionText}>{opt}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+function ScaleSelect({ options, value, onChange }) {
+  return (
+    <View style={styles.scaleWrap}>
+      <View style={styles.scaleDotsRow}>
+        {options.map((opt, idx) => (
+          <React.Fragment key={opt}>
+            <TouchableOpacity onPress={() => onChange(opt)} style={styles.scaleDotTouch}>
+              <View style={[styles.scaleDot, value === opt && styles.scaleDotActive]} />
+            </TouchableOpacity>
+            {idx < options.length - 1 && <View style={styles.scaleLine} />}
+          </React.Fragment>
+        ))}
+      </View>
+      <View style={styles.scaleLabelsRow}>
+        {options.map((opt) => (
+          <Text key={opt} style={styles.scaleLabel}>{opt}</Text>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export default function ExperienceProgress({ navigate, route }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [selections, setSelections] = useState({
-    product: '',
-    material: '',
+    candidate: '',
+    materialFeel: '',
+    materialMemo: '',
     size: '',
     storage: '',
     wear: '',
@@ -16,11 +63,7 @@ export default function ExperienceProgress({ navigate, route }) {
 
   const reservationId = route?.params?.reservationId;
 
-  const stepIndicators = [
-    { num: 1, active: currentStep >= 1, label: '소재' },
-    { num: 2, active: currentStep >= 2, label: '크기' },
-    { num: 3, active: currentStep >= 3, label: '색상' },
-  ];
+  const set = (key, val) => setSelections((prev) => ({ ...prev, [key]: val }));
 
   const handlePrev = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -41,79 +84,77 @@ export default function ExperienceProgress({ navigate, route }) {
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('experience-detail')}>
-            <Text style={styles.backButton}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>
-            {currentStep === 1 && '소재 평가'}
-            {currentStep === 2 && '크기 평가'}
-            {currentStep === 3 && '색상 평가'}
-          </Text>
-          <View style={{ width: 24 }} />
-        </View>
+        <Header
+          title={currentStep === 1 ? '체험 진행 화면' : '취향 정보 입력'}
+          onBack={() => navigate('experience-detail')}
+        />
 
-        <View style={styles.stepIndicator}>
-          {stepIndicators.map((step, idx) => (
-            <View key={step.num} style={styles.stepRow}>
-              <View style={[styles.stepDot, step.active && styles.stepDotActive]}>
-                <Text style={[styles.stepNum, step.active && styles.stepNumActive]}>
-                  {step.num}
-                </Text>
-              </View>
-              {idx < 2 && <View style={[styles.stepLine, step.active && styles.stepLineActive]} />}
+        <StepIndicator
+          stepNum={currentStep}
+          stepDesc={
+            currentStep === 1
+              ? '소재를 확인해 주세요.'
+              : currentStep === 2
+              ? '크기를 확인해 주세요.'
+              : '착용감을 확인해 주세요.'
+          }
+          totalDots={4}
+          activeDot={currentStep - 1}
+        />
+
+        <Card style={{ marginTop: 16 }}>
+          {currentStep === 1 && (
+            <>
+              <Text style={styles.sectionTitle}>고객이 가장 선호한 제품</Text>
+              <RadioGroup options={CANDIDATES} value={selections.candidate} onChange={(v) => set('candidate', v)} />
+
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>소재체험</Text>
+              <ScaleSelect
+                options={MATERIAL_SCALE}
+                value={selections.materialFeel}
+                onChange={(v) => set('materialFeel', v)}
+              />
+
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>직원 메모(선택)</Text>
+              <PillInput
+                placeholder="메모를 입력하세요"
+                value={selections.materialMemo}
+                onChangeText={(v) => set('materialMemo', v)}
+              />
+            </>
+          )}
+
+          {currentStep === 2 && (
+            <>
+              <Text style={styles.sectionTitle}>선호 크기</Text>
+              <RadioGroup options={SIZES} value={selections.size} onChange={(v) => set('size', v)} />
+
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>수납감</Text>
+              <RadioGroup options={STORAGE} value={selections.storage} onChange={(v) => set('storage', v)} />
+            </>
+          )}
+
+          {currentStep === 3 && (
+            <>
+              <Text style={styles.sectionTitle}>착용감</Text>
+              <RadioGroup options={WEAR} value={selections.wear} onChange={(v) => set('wear', v)} />
+
+              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>무게</Text>
+              <RadioGroup options={WEIGHT} value={selections.weight} onChange={(v) => set('weight', v)} />
+            </>
+          )}
+
+          {currentStep === 1 ? (
+            <View style={{ alignItems: 'flex-end', marginTop: 24 }}>
+              <Button title="다음" onPress={handleNext} />
             </View>
-          ))}
-        </View>
-
-        <Text style={styles.stepLabel}>STEP 0{currentStep}</Text>
-        <Text style={styles.stepDescription}>
-          {currentStep === 1 && '제품의 소재 감촉을 평가해주세요.'}
-          {currentStep === 2 && '제품의 크기를 평가해주세요.'}
-          {currentStep === 3 && '제품의 색상을 평가해주세요.'}
-        </Text>
-
-        <View style={styles.content}>
-          <Text style={styles.sectionTitle}>만족도 선택</Text>
-          <View style={styles.optionGroup}>
-            {['매우 만족', '만족', '보통', '불만족'].map((option) => {
-              const fieldKey = currentStep === 1 ? 'material' : currentStep === 2 ? 'size' : 'wear';
-              return (
-                <TouchableOpacity
-                  key={option}
-                  style={[
-                    styles.option,
-                    selections[fieldKey] === option && styles.optionSelected,
-                  ]}
-                  onPress={() => setSelections({ ...selections, [fieldKey]: option })}
-                >
-                  <View
-                    style={[
-                      styles.optionRadio,
-                      selections[fieldKey] === option && styles.optionRadioSelected,
-                    ]}
-                  />
-                  <Text style={styles.optionText}>{option}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.buttonGroup}>
-          <Button
-            title="이전"
-            variant="outline"
-            style={{ flex: 1 }}
-            onPress={handlePrev}
-            disabled={currentStep === 1}
-          />
-          <Button
-            title={currentStep === 3 ? '다음' : '다음'}
-            style={{ flex: 1, marginLeft: 8 }}
-            onPress={handleNext}
-          />
-        </View>
+          ) : (
+            <View style={styles.buttonGroup}>
+              <Button title="이전" variant="outline" style={{ flex: 1 }} onPress={handlePrev} />
+              <Button title="다음" style={{ flex: 1, marginLeft: 8 }} onPress={handleNext} />
+            </View>
+          )}
+        </Card>
       </ScrollView>
     </View>
   );
@@ -121,34 +162,6 @@ export default function ExperienceProgress({ navigate, route }) {
 
 const styles = StyleSheet.create({
   screen: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 28 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  backButton: { fontSize: 26, color: colors.text, lineHeight: 26 },
-  title: { fontSize: 17, fontWeight: '700', color: colors.text },
-  stepIndicator: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  stepRow: { flexDirection: 'row', alignItems: 'center' },
-  stepDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.accent1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: colors.border,
-  },
-  stepDotActive: { backgroundColor: colors.main, borderColor: colors.main },
-  stepNum: { fontSize: 14, fontWeight: '700', color: colors.text },
-  stepNumActive: { color: colors.white },
-  stepLine: { width: 20, height: 1.5, backgroundColor: colors.border, marginHorizontal: 4 },
-  stepLineActive: { backgroundColor: colors.main },
-  stepLabel: { fontSize: 13, fontWeight: '700', color: colors.main, marginBottom: 4 },
-  stepDescription: { fontSize: 14, color: colors.text, marginBottom: 20, fontWeight: '500' },
-  content: { marginBottom: 20 },
   sectionTitle: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 12 },
   optionGroup: { gap: 8 },
   option: {
@@ -161,9 +174,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: colors.white,
   },
-  optionSelected: { backgroundColor: colors.accent1, borderColor: colors.main },
+  optionSelected: { backgroundColor: colors.accent1 },
   optionRadio: { width: 16, height: 16, borderRadius: 8, borderWidth: 1.5, borderColor: colors.main, marginRight: 10 },
   optionRadioSelected: { backgroundColor: colors.main, borderColor: colors.main },
   optionText: { fontSize: 13, color: colors.text, fontWeight: '500' },
-  buttonGroup: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 20 },
+  scaleWrap: { paddingHorizontal: 4 },
+  scaleDotsRow: { flexDirection: 'row', alignItems: 'center' },
+  scaleDotTouch: { padding: 4 },
+  scaleDot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1.5, borderColor: colors.main, backgroundColor: colors.white },
+  scaleDotActive: { backgroundColor: colors.main },
+  scaleLine: { flex: 1, height: 1.5, backgroundColor: colors.border },
+  scaleLabelsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
+  scaleLabel: { fontSize: 10, color: colors.titleSub, flex: 1, textAlign: 'center' },
+  buttonGroup: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 24 },
 });

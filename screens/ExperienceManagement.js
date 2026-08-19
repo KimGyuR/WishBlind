@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { FakeStatusBar, Header, Button } from '../components/Shared';
+import { FakeStatusBar, Header } from '../components/Shared';
 import { colors } from '../theme';
 import { getStaffFittings } from '../services/api';
 
 export default function ExperienceManagement({ navigate }) {
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     loadReservations();
@@ -30,21 +30,13 @@ export default function ExperienceManagement({ navigate }) {
 
   const getStatusInfo = (status) => {
     const statusMap = {
-      SCHEDULED: { label: '계획 대기', color: colors.blue?.text || '#2196F3' },
-      IN_PROGRESS: { label: '진행 중', color: colors.green?.text || '#4CAF50' },
-      COMPLETED: { label: '완료', color: colors.yellow?.text || '#FFC107' },
-      CANCELLED: { label: '취소', color: '#999' },
+      SCHEDULED: { label: '체험 대기...', color: colors.main },
+      IN_PROGRESS: { label: '체험 중...', color: colors.main },
+      COMPLETED: { label: '완료', color: colors.green.text },
+      CANCELLED: { label: '취소', color: colors.textMuted },
     };
     return statusMap[status] || { label: status, color: colors.text };
   };
-
-  const handleDateChange = (days) => {
-    const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + days);
-    setSelectedDate(newDate.toISOString().split('T')[0]);
-  };
-
-  const todayReservations = reservations;
 
   if (loading) {
     return (
@@ -58,70 +50,50 @@ export default function ExperienceManagement({ navigate }) {
     <View style={{ flex: 1 }}>
       <FakeStatusBar />
       <ScrollView contentContainerStyle={styles.screen}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigate('home')}>
-            <Text style={styles.backButton}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>매장 체험 관리</Text>
-          <View style={{ width: 24 }} />
+        <Header title="매장 체험 관리" onBack={() => navigate('home')} />
+
+        <View style={styles.todaySection}>
+          <Text style={styles.todayTitle}>오늘의 예약</Text>
+          <Text style={styles.todayDate}>
+            {selectedDate.split('-').join('.')}
+          </Text>
         </View>
 
-        <View style={styles.dateNavigation}>
-          <TouchableOpacity onPress={() => handleDateChange(-1)}>
-            <Text style={styles.dateArrow}>‹</Text>
-          </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={styles.cardCount}>{reservations.length}건</Text>
 
-          <View style={styles.todaySection}>
-            <View style={styles.todayHeader}>
-              <Text style={styles.todayTitle}>예약 현황</Text>
-              <Text style={styles.todayCount}>{todayReservations.length}건</Text>
-            </View>
-            <Text style={styles.todayDate}>
-              {selectedDate.split('-')[1]}.{selectedDate.split('-')[2]}
-            </Text>
-          </View>
-
-          <TouchableOpacity onPress={() => handleDateChange(1)}>
-            <Text style={styles.dateArrow}>›</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.reservationList}>
-          {todayReservations.length === 0 ? (
+          {reservations.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyText}>예약이 없습니다</Text>
             </View>
           ) : (
-            todayReservations.map((res) => {
+            reservations.map((res, idx) => {
               const statusInfo = getStatusInfo(res.status);
+              const isCancelled = res.status === 'CANCELLED';
               return (
-                <TouchableOpacity
-                  key={res.id}
-                  style={styles.reservationCard}
-                  onPress={() => navigate('experience-detail', { reservationId: res.id })}
-                >
-                  <View style={styles.timeSection}>
-                    <Text style={styles.time}>
-                      {res.reserveTime || '시간 미정'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.infoSection}>
-                    <Text style={styles.customerName}>{res.customerName || '고객'}</Text>
-                    <Text style={styles.program} numberOfLines={1}>
-                      {res.program || '매장 체험'}
-                    </Text>
-                  </View>
-
-                  <View style={styles.cardFooter}>
-                    <View style={[styles.statusBadge, { backgroundColor: statusInfo.color + '20' }]}>
-                      <Text style={[styles.statusBadgeText, { color: statusInfo.color }]}>
+                <View key={res.id}>
+                  {idx > 0 && <View style={styles.divider} />}
+                  <TouchableOpacity
+                    style={styles.item}
+                    onPress={() => navigate('experience-detail', { reservationId: res.id })}
+                  >
+                    <View style={styles.itemTopRow}>
+                      <Text style={[styles.itemTime, isCancelled && styles.itemTimeMuted]}>
+                        {res.reserveTime || '시간 미정'}
+                      </Text>
+                      <Text style={[styles.itemStatus, { color: statusInfo.color }]}>
                         {statusInfo.label}
                       </Text>
                     </View>
-                    <Text style={styles.detailLink}>› </Text>
-                  </View>
-                </TouchableOpacity>
+                    <Text style={[styles.itemCustomer, isCancelled && styles.itemTimeMuted]}>
+                      {res.customerName || '고객'}
+                    </Text>
+                    <Text style={styles.itemProgram} numberOfLines={1}>
+                      {res.program || '매장 체험'}
+                    </Text>
+                    <Text style={styles.itemDetailLink}>자세히 보기 ›</Text>
+                  </TouchableOpacity>
+                </View>
               );
             })
           )}
@@ -133,41 +105,26 @@ export default function ExperienceManagement({ navigate }) {
 
 const styles = StyleSheet.create({
   screen: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 28 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
+  todaySection: { alignItems: 'center', marginTop: 4, marginBottom: 20 },
+  todayTitle: { fontSize: 14, fontWeight: '700', color: colors.main, marginBottom: 4 },
+  todayDate: { fontSize: 20, fontWeight: '700', color: colors.text },
+  card: {
+    backgroundColor: colors.cardBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    borderRadius: 24,
+    padding: 20,
   },
-  backButton: { fontSize: 26, color: colors.text, lineHeight: 26 },
-  title: { fontSize: 17, fontWeight: '700', color: colors.text },
-  dateNavigation: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  dateArrow: { fontSize: 24, color: colors.main, fontWeight: '700' },
-  todaySection: { flex: 1, alignItems: 'center', marginHorizontal: 16 },
-  todayHeader: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 },
-  todayTitle: { fontSize: 15, fontWeight: '600', color: colors.text },
-  todayCount: { fontSize: 15, fontWeight: '600', color: colors.main },
-  todayDate: { fontSize: 18, fontWeight: '700', color: colors.main, marginTop: 4 },
-  reservationList: { gap: 12 },
+  cardCount: { fontSize: 13, fontWeight: '600', color: colors.titleSub, textAlign: 'right', marginBottom: 8 },
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 14, color: colors.textMuted },
-  reservationCard: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.accent2,
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeSection: { marginRight: 12 },
-  time: { fontSize: 13, fontWeight: '700', color: colors.main, backgroundColor: colors.accent1, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
-  infoSection: { flex: 1 },
-  customerName: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 2 },
-  program: { fontSize: 12, color: colors.titleSub },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  statusBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 8 },
-  statusBadgeText: { fontSize: 11, fontWeight: '600' },
-  detailLink: { fontSize: 16, color: colors.textMuted },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  item: { gap: 4 },
+  itemTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  itemTime: { fontSize: 15, fontWeight: '700', color: colors.text },
+  itemTimeMuted: { color: colors.textMuted, textDecorationLine: 'line-through' },
+  itemStatus: { fontSize: 13, fontWeight: '600' },
+  itemCustomer: { fontSize: 14, fontWeight: '600', color: colors.text, marginTop: 4 },
+  itemProgram: { fontSize: 13, color: colors.titleSub },
+  itemDetailLink: { fontSize: 13, fontWeight: '600', color: colors.main, textAlign: 'right', marginTop: 6 },
 });
