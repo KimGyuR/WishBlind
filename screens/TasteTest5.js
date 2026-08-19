@@ -6,6 +6,15 @@ import { submitPreferences } from '../services/api';
 
 const AVOIDS = ['큰 로고', '무거운 제품', '화려한 색상', '작은 수납공간', '관리가 어려운 소재', '특별히 없음'];
 
+// 화면마다 한글 라벨로 모아둔 값을 서버가 요구하는 enum 값으로 변환
+const COLOR_ENUM = { '브라운': 'BROWN', '화이트': 'WHITE', '베이지': 'BEIGE', '블랙': 'BLACK', '그린': 'GREEN', '상관없음': 'ANY', '컬러 포인트': 'COLOR_POINT' };
+const MOOD_ENUM = { '심플한': 'SIMPLE', '모던한': 'MODERN', '트렌디한': 'TRENDY', '화려한': 'GLAMOROUS', '클래식한': 'CLASSIC', '상관없음': 'ANY' };
+const MATERIAL_ENUM = { '패브릭': 'FABRIC', '가죽': 'LEATHER', '메탈': 'METAL', '기타': 'ETC' };
+const LOGO_ENUM = { '거의 없음': 'NONE', '작게 보임': 'SUBTLE', '눈에 띄어도 괜찮음': 'VISIBLE' };
+const SIZE_ENUM = { '짧게': 'SMALL', '기본 길이': 'BASIC', '길게': 'LONG', '상관 없음': 'ANY' };
+const WEAR_ENUM = { '작고 섬세함': 'DELICATE', '적당한 존재감': 'MODERATE', '포인트가 되는 크기': 'STATEMENT' };
+const AVOID_ENUM = { '큰 로고': 'BIG_LOGO', '무거운 제품': 'HEAVY', '화려한 색상': 'FLASHY_COLOR', '작은 수납공간': 'SMALL_STORAGE', '관리가 어려운 소재': 'HARD_TO_CARE', '특별히 없음': 'NONE' };
+
 export default function TasteTest5({ navigate }) {
   const [selected, setSelected] = useState(global.tasteAnswers?.avoid || []);
   const [extra, setExtra] = useState(global.tasteAnswers?.avoidEtc || '');
@@ -29,15 +38,15 @@ export default function TasteTest5({ navigate }) {
         return;
       }
 
-      // API로 취향 제출
+      // API로 취향 제출 (한글 라벨 → 서버 enum 값 변환)
       const response = await submitPreferences(inviteToken, {
-        colors: global.tasteAnswers.colors || [],
-        mood: global.tasteAnswers.mood || '',
-        material: global.tasteAnswers.material || '',
-        logoVisibility: global.tasteAnswers.logoVisibility || '',
-        size: global.tasteAnswers.size || '',
-        wearStyle: global.tasteAnswers.wearStyle || '',
-        avoid: selected,
+        colors: (global.tasteAnswers.colors || []).map((c) => COLOR_ENUM[c]).filter(Boolean),
+        mood: MOOD_ENUM[global.tasteAnswers.mood],
+        material: MATERIAL_ENUM[global.tasteAnswers.material],
+        logoVisibility: LOGO_ENUM[global.tasteAnswers.logoVisibility],
+        size: SIZE_ENUM[global.tasteAnswers.size],
+        wearStyle: WEAR_ENUM[global.tasteAnswers.wearStyle],
+        avoid: selected.map((a) => AVOID_ENUM[a]).filter(Boolean),
         avoidEtc: extra,
       });
 

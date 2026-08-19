@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { FakeStatusBar, Header, StepIndicator, Card, Chips, Button } from '../components/Shared';
 import { colors } from '../theme';
 
@@ -13,6 +13,10 @@ export default function TasteTest1({ navigate }) {
   };
 
   const handleNext = () => {
+    if (selected.length === 0) {
+      Alert.alert('알림', '색상을 하나 이상 선택해주세요');
+      return;
+    }
     global.tasteAnswers = global.tasteAnswers || {};
     global.tasteAnswers.colors = selected;
     navigate('taste-2');

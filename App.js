@@ -1,6 +1,31 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Platform, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+
+// react-native-web의 Alert.alert는 빈 함수(no-op)라서 웹에서는 확인창이 아예 안 뜨고
+// 버튼 콜백도 절대 실행되지 않는다 (로그아웃, 회원가입 완료 이동 등이 전부 죽어있던 원인).
+// window.confirm/alert 기반으로 동작하도록 웹에서만 덮어씌운다.
+if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  Alert.alert = (title, message, buttons) => {
+    const btns = buttons && buttons.length ? buttons : [{ text: '확인' }];
+    const text = [title, message].filter(Boolean).join('\n\n');
+
+    if (btns.length > 1) {
+      // 'cancel' 스타일을 명시한 버튼이 있으면 그게 취소, 아니면 관례대로 첫 버튼이 취소.
+      // 확인/실행 버튼은 'destructive' 스타일(로그아웃 등)을 우선하고, 없으면 마지막 버튼.
+      const cancelBtn = btns.find((b) => b.style === 'cancel') || btns[0];
+      const confirmBtn = btns.find((b) => b.style === 'destructive') || btns[btns.length - 1];
+      if (window.confirm(text)) {
+        confirmBtn?.onPress?.();
+      } else {
+        cancelBtn?.onPress?.();
+      }
+    } else {
+      window.alert(text);
+      btns[0]?.onPress?.();
+    }
+  };
+}
 
 import Login from './screens/Login';
 import Signup from './screens/Signup';

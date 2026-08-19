@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Alert } from 'react-native';
 import { FakeStatusBar, Button, LogoBlock, ProfileIcon } from '../components/Shared';
 import { colors } from '../theme';
 import { getGiftSessions } from '../services/api';
 
-const getStatusInfo = (status) => {
-  const statusMap = {
-    AWAITING_PREFERENCES: { label: '취향 입력 대기', dot: '🟡', color: colors.yellow?.text || '#FFC107' },
-    PREFERENCES_RECEIVED: { label: '추천 대기 중', dot: '🔵', color: colors.blue?.text || '#2196F3' },
-    AI_RECOMMENDATIONS_DONE: { label: 'AI 추천 완료', dot: '🟢', color: colors.green?.text || '#4CAF50' },
-    GIFT_SELECTED: { label: '선물 선택 완료', dot: '✅', color: colors.green?.text || '#4CAF50' },
-    PAYMENT_PENDING: { label: '결제 대기 중', dot: '💳', color: '#FF9800' },
-    PAYMENT_COMPLETED: { label: '결제 완료', dot: '💰', color: colors.green?.text || '#4CAF50' },
-    DELIVERY_SCHEDULED: { label: '배송 준비 중', dot: '📦', color: colors.blue?.text || '#2196F3' },
-    DELIVERY_COMPLETED: { label: '배송 완료', dot: '✔️', color: colors.green?.text || '#4CAF50' },
-    GIFT_OPENED: { label: '선물 공개됨', dot: '🎉', color: colors.green?.text || '#4CAF50' },
-  };
-  return statusMap[status] || { label: status, dot: '❓', color: colors.text };
+// 라벨은 서버가 내려주는 statusLabel을 그대로 쓰고(새 상태가 추가돼도 항상 맞음),
+// 여기서는 색상/점 표시만 상태별로 매핑한다.
+const STATUS_STYLE = {
+  CREATED: { dot: '⚪', color: colors.titleSub },
+  INVITED: { dot: '🟡', color: colors.yellow?.text || '#FFC107' },
+  ANALYZING: { dot: '🔵', color: colors.blue?.text || '#2196F3' },
+  RECOMMENDED: { dot: '🟢', color: colors.green?.text || '#4CAF50' },
+  SELECTED: { dot: '✅', color: colors.green?.text || '#4CAF50' },
+  PREPARING: { dot: '📦', color: '#FF9800' },
+  PAID: { dot: '💰', color: colors.green?.text || '#4CAF50' },
+  DELIVERED: { dot: '✔️', color: colors.green?.text || '#4CAF50' },
+  OPENED: { dot: '🎉', color: colors.green?.text || '#4CAF50' },
 };
+
+const getStatusInfo = (item) => {
+  const style = STATUS_STYLE[item.status] || { dot: '❓', color: colors.text };
+  return { ...style, label: item.statusLabel || item.status };
+};
+
+// 아직 추천 결과가 없는 상태(초대 전/취향 대기 중)는 눌러도 이동할 화면이 없으니
+// 안내만 해준다. 그 이후 상태는 전부 추천 결과 화면에서 확인 가능.
+const isViewable = (status) => !['CREATED', 'INVITED'].includes(status);
 
 export default function Home({ navigate }) {
   const [history, setHistory] = useState([]);
@@ -81,12 +89,18 @@ export default function Home({ navigate }) {
           ) : (
             <View style={{ gap: 12 }}>
               {history.map((item) => {
-                const statusInfo = getStatusInfo(item.status);
+                const statusInfo = getStatusInfo(item);
                 return (
                   <TouchableOpacity
                     key={item.id}
                     style={styles.historyItem}
-                    onPress={() => (item.status === 'AI_RECOMMENDATIONS_DONE' ? navigate('ai-results') : null)}
+                    onPress={() => {
+                      if (isViewable(item.status)) {
+                        navigate('ai-results', { sessionId: item.id });
+                      } else {
+                        Alert.alert('알림', '상대방이 아직 취향 정보를 입력하지 않았어요.\n초대 링크를 공유해보세요.');
+                      }
+                    }}
                   >
                     <View style={styles.historyTopRow}>
                       <Text style={[styles.statusText, { color: statusInfo.color }]}>

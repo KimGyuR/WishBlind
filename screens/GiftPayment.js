@@ -75,14 +75,14 @@ export default function GiftPayment({ navigate, route }) {
         return;
       }
 
+      // 백엔드는 mock 결제라 orderId/paymentKey/method만 받는다.
+      // 카드 정보는 UI 검증용일 뿐 서버로 보내면 알 수 없는 필드라며 요청 자체를 거부한다.
+      // simulateFail은 스웨거상 선택 필드지만 실제로는 값이 없으면 요청이 거부된다.
       const paymentData = {
         orderId: paymentInfo.orderId,
         paymentKey: paymentInfo.paymentKey,
         method: paymentMethod,
-        cardNumber: paymentMethod === 'CARD' ? cardNumber.replace(/\s/g, '') : undefined,
-        cardExpiry: paymentMethod === 'CARD' ? cardExpiry : undefined,
-        cardCvc: paymentMethod === 'CARD' ? cardCvc : undefined,
-        cardHolder: paymentMethod === 'CARD' ? cardHolder : undefined,
+        simulateFail: false,
       };
 
       const response = await confirmPayment(sessionId, paymentData);

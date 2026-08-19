@@ -6,10 +6,12 @@ import { colors } from '../theme';
 const VIBES = ['심플한', '모던한', '트렌디한', '화려한', '클래식한', '상관없음'];
 
 export default function TasteTest2({ navigate }) {
-  const [selected, setSelected] = useState(['심플한', '클래식한']);
+  const [selected, setSelected] = useState(global.tasteAnswers?.mood || '심플한');
 
-  const toggle = (opt) => {
-    setSelected((prev) => (prev.includes(opt) ? prev.filter((v) => v !== opt) : [...prev, opt]));
+  const handleNext = () => {
+    global.tasteAnswers = global.tasteAnswers || {};
+    global.tasteAnswers.mood = selected;
+    navigate('taste-3');
   };
 
   return (
@@ -23,11 +25,11 @@ export default function TasteTest2({ navigate }) {
         <Card style={{ marginTop: 16 }}>
           <Text style={styles.label}>분위기</Text>
           <View style={styles.chipBox}>
-            <Chips options={VIBES} selected={selected} onToggle={toggle} />
+            <Chips options={VIBES} selected={[selected]} onToggle={setSelected} />
           </View>
 
           <View style={{ alignItems: 'flex-end', marginTop: 20 }}>
-            <Button title="다음" onPress={() => navigate('taste-3')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </View>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Modal, Image, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { FakeStatusBar, Header, Button, BtnRow } from '../components/Shared';
 import { colors } from '../theme';
 import { getRecommendationDetail, finalizeGiftSession } from '../services/api';
@@ -83,7 +83,11 @@ export default function AIDetail({ navigate, route }) {
         <Header title="AI 추천 상세" onBack={() => navigate('ai-results')} />
 
         <View style={styles.productImg}>
-          <Text style={styles.productEmoji}>{detail.productImage || '🎁'}</Text>
+          {detail.imageUrl ? (
+            <Image source={{ uri: detail.imageUrl }} style={styles.productImage} resizeMode="cover" />
+          ) : (
+            <Text style={styles.productEmoji}>🎁</Text>
+          )}
         </View>
 
         <Text style={styles.productName}>{detail.productName}</Text>
@@ -110,14 +114,18 @@ export default function AIDetail({ navigate, route }) {
 
         <View style={styles.divider} />
 
-        {detail.scores && detail.scores.length > 0 && (
+        {detail.tasteAnalysis && (
           <>
             <Text style={styles.sectionTitle}>취향 분석</Text>
             <View style={{ marginBottom: 14 }}>
-              {detail.scores.map(([label, score]) => (
+              {[
+                ['색상', detail.tasteAnalysis.colorStars],
+                ['스타일', detail.tasteAnalysis.styleStars],
+                ['실용성', detail.tasteAnalysis.practicalityStars],
+              ].map(([label, stars]) => (
                 <View key={label} style={styles.scoreRow}>
                   <Text style={styles.scoreLabel}>{label}</Text>
-                  <Text style={styles.stars}>{score}</Text>
+                  <Text style={styles.stars}>{'★'.repeat(stars || 0)}{'☆'.repeat(5 - (stars || 0))}</Text>
                 </View>
               ))}
             </View>
@@ -186,7 +194,8 @@ export default function AIDetail({ navigate, route }) {
 }
 
 const styles = StyleSheet.create({
-  productImg: { height: 200, borderRadius: 16, backgroundColor: colors.accent1, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  productImg: { height: 200, borderRadius: 16, backgroundColor: colors.accent1, justifyContent: 'center', alignItems: 'center', marginBottom: 16, overflow: 'hidden' },
+  productImage: { width: '100%', height: '100%' },
   productEmoji: { fontSize: 64 },
   productName: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 4, textAlign: 'center' },
   brand: { fontSize: 13, color: colors.titleSub, textAlign: 'center', marginBottom: 16 },

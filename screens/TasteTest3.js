@@ -7,14 +7,15 @@ const MATERIALS = ['패브릭', '가죽', '메탈', '기타'];
 const LOGOS = ['거의 없음', '작게 보임', '눈에 띄어도 괜찮음'];
 
 export default function TasteTest3({ navigate }) {
-  const [materials, setMaterials] = useState(['패브릭']);
-  const [logo, setLogo] = useState(['작게 보임']);
+  const [material, setMaterial] = useState(global.tasteAnswers?.material || '패브릭');
+  const [logo, setLogo] = useState(global.tasteAnswers?.logoVisibility || '작게 보임');
 
-  const toggleMaterial = (opt) => {
-    setMaterials((prev) => (prev.includes(opt) ? prev.filter((m) => m !== opt) : [...prev, opt]));
+  const handleNext = () => {
+    global.tasteAnswers = global.tasteAnswers || {};
+    global.tasteAnswers.material = material;
+    global.tasteAnswers.logoVisibility = logo;
+    navigate('taste-4');
   };
-
-  const toggleLogo = (opt) => setLogo([opt]);
 
   return (
     <View style={{ flex: 1 }}>
@@ -27,16 +28,16 @@ export default function TasteTest3({ navigate }) {
         <Card style={{ marginTop: 16 }}>
           <Text style={styles.label}>선호 소재</Text>
           <View style={[styles.chipBox, { marginBottom: 20 }]}>
-            <Chips options={MATERIALS} selected={materials} onToggle={toggleMaterial} />
+            <Chips options={MATERIALS} selected={[material]} onToggle={setMaterial} />
           </View>
 
           <Text style={styles.label}>로고 노출</Text>
           <View style={styles.chipBox}>
-            <Chips options={LOGOS} selected={logo} onToggle={toggleLogo} />
+            <Chips options={LOGOS} selected={[logo]} onToggle={setLogo} />
           </View>
 
           <View style={{ alignItems: 'flex-end', marginTop: 20 }}>
-            <Button title="다음" onPress={() => navigate('taste-4')} />
+            <Button title="다음" onPress={handleNext} />
           </View>
         </Card>
       </View>
