@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { FakeStatusBar, Header } from '../components/Shared';
 import { colors } from '../theme';
 import { getStaffFittings } from '../services/api';
 
+// 실제 예약이 아직 없을 때 화면이 비어 보이지 않도록 보여주는 샘플 데이터.
+// 실제 예약이 하나라도 있으면 이건 안 쓰이고 실데이터만 표시된다.
+const DUMMY_RESERVATIONS = [
+  { id: 'dummy-1', reserveTime: '14:00 ~ 15:00', customerName: '김사자', program: '가방 - 취업 축하 선물', status: 'SCHEDULED', isDummy: true },
+  { id: 'dummy-2', reserveTime: '18:00 ~ 19:00', customerName: '김사자', program: '가방 - 취업 축하 선물', status: 'IN_PROGRESS', isDummy: true },
+  { id: 'dummy-3', reserveTime: '14:00 ~ 15:00', customerName: '김사자', program: '가방 - 취업 축하 선물', status: 'CANCELLED', isDummy: true },
+];
+
 export default function ExperienceManagement({ navigate }) {
   const [reservations, setReservations] = useState([]);
+  const [usingSample, setUsingSample] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -19,10 +28,18 @@ export default function ExperienceManagement({ navigate }) {
       const response = await getStaffFittings(selectedDate);
       if (response.code === 'SUCCESS' && response.data) {
         const data = Array.isArray(response.data) ? response.data : [response.data];
-        setReservations(data);
+        if (data.length > 0) {
+          setReservations(data);
+          setUsingSample(false);
+        } else {
+          setReservations(DUMMY_RESERVATIONS);
+          setUsingSample(true);
+        }
       }
     } catch (err) {
-      Alert.alert('오류', err.message || '예약 정보를 불러올 수 없습니다');
+      // 조회 자체가 실패해도 화면이 비어보이지 않도록 샘플로 대체
+      setReservations(DUMMY_RESERVATIONS);
+      setUsingSample(true);
     } finally {
       setLoading(false);
     }
@@ -60,7 +77,10 @@ export default function ExperienceManagement({ navigate }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardCount}>{reservations.length}건</Text>
+          <View style={styles.cardTopRow}>
+            {usingSample && <Text style={styles.sampleBadge}>샘플</Text>}
+            <Text style={styles.cardCount}>{reservations.length}건</Text>
+          </View>
 
           {reservations.length === 0 ? (
             <View style={styles.emptyState}>
@@ -115,7 +135,17 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
   },
-  cardCount: { fontSize: 13, fontWeight: '600', color: colors.titleSub, textAlign: 'right', marginBottom: 8 },
+  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  cardCount: { fontSize: 13, fontWeight: '600', color: colors.titleSub },
+  sampleBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.titleSub,
+    backgroundColor: colors.accent1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
   emptyState: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 14, color: colors.textMuted },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },

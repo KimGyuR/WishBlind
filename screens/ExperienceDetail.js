@@ -11,6 +11,33 @@ const STATUS_LABELS = {
   CANCELLED: '취소',
 };
 
+// 목록에서 실제 예약이 없을 때 보여주는 샘플 예약(dummy-1/2/3)에 대응하는 상세 정보.
+const DUMMY_DETAILS = {
+  'dummy-1': {
+    id: 'dummy-1', status: 'SCHEDULED', reserveDate: '2026-08-06', reserveTime: '14:00',
+    customerName: '김사자', reservationCode: 'AA-1234',
+    giftSession: { occasion: '취업 축하', category: '가방', brand: 'CHANEL' },
+    recommendationCandidates: [{ productName: '듀가나디' }, { productName: '듀가나디' }, { productName: '듀가나디' }],
+    fittingItems: ['소재', '크기', '무게', '착용감'],
+  },
+  'dummy-2': {
+    id: 'dummy-2', status: 'IN_PROGRESS', reserveDate: '2026-08-06', reserveTime: '18:00',
+    customerName: '김사자', reservationCode: 'AA-1235',
+    giftSession: { occasion: '취업 축하', category: '가방', brand: 'CHANEL' },
+    recommendationCandidates: [{ productName: '듀가나디' }, { productName: '듀가나디' }, { productName: '듀가나디' }],
+    fittingItems: ['소재', '크기', '무게', '착용감'],
+  },
+  'dummy-3': {
+    id: 'dummy-3', status: 'CANCELLED', reserveDate: '2026-08-06', reserveTime: '14:00',
+    customerName: '김사자', reservationCode: 'AA-1236',
+    giftSession: { occasion: '취업 축하', category: '가방', brand: 'CHANEL' },
+    recommendationCandidates: [{ productName: '듀가나디' }, { productName: '듀가나디' }, { productName: '듀가나디' }],
+    fittingItems: ['소재', '크기', '무게', '착용감'],
+  },
+};
+
+const isDummyId = (id) => typeof id === 'string' && id.startsWith('dummy');
+
 export default function ExperienceDetail({ navigate, route }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +57,11 @@ export default function ExperienceDetail({ navigate, route }) {
         return;
       }
 
+      if (isDummyId(reservationId)) {
+        setDetail(DUMMY_DETAILS[reservationId]);
+        return;
+      }
+
       const response = await getFittingDetail(reservationId);
       if (response.code === 'SUCCESS' && response.data) {
         setDetail(response.data);
@@ -44,6 +76,11 @@ export default function ExperienceDetail({ navigate, route }) {
   };
 
   const handleStartFitting = async () => {
+    if (isDummyId(reservationId)) {
+      navigate('experience-progress', { reservationId });
+      return;
+    }
+
     setStarting(true);
     try {
       const response = await startFitting(reservationId);

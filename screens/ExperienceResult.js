@@ -44,6 +44,12 @@ export default function ExperienceResult({ navigate, route }) {
         return;
       }
 
+      // 샘플(더미) 예약은 실제로 저장할 곳이 없으니 완료 화면만 보여준다.
+      if (typeof reservationId === 'string' && reservationId.startsWith('dummy')) {
+        setShowComplete(true);
+        return;
+      }
+
       const response = await submitFittingResult(reservationId, {
         materialFeel: summary.materialFeel,
         sizeFeel: summary.sizeFeel,
