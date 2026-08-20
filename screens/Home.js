@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import { FakeStatusBar, Button, LogoBlock, ProfileIcon } from '../components/Shared';
 import { colors } from '../theme';
 import { getGiftSessions } from '../services/api';
@@ -23,14 +23,14 @@ const getStatusInfo = (item) => {
   return { ...style, label: item.statusLabel || item.status };
 };
 
-// 아직 추천 결과가 없는 상태(초대 전/취향 대기 중)는 눌러도 이동할 화면이 없으니
-// 안내만 해준다. 그 이후 상태는 전부 추천 결과 화면에서 확인 가능.
-const isViewable = (status) => !['CREATED', 'INVITED'].includes(status);
+// 백엔드에 권한 개념이 없어서 프론트에서만 특정 계정을 직원으로 취급한다(진짜 보안 아님, 데모용).
+const STAFF_EMAILS = ['admin@wishblind.com'];
 
 export default function Home({ navigate }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const userId = global.userId;
+  const isStaff = STAFF_EMAILS.includes(global.userEmail);
 
   useEffect(() => {
     loadGiftSessions();
@@ -65,7 +65,9 @@ export default function Home({ navigate }) {
         <View style={{ gap: 14, marginBottom: 20 }}>
           <Button title="선물 시작하기" full onPress={() => navigate('gift-step1')} />
           <Button title="초대받고 취향 입력하기" full onPress={() => navigate('invite-confirm')} />
-          <Button title="매장 체험 관리" full variant="secondary" onPress={() => navigate('experience-management')} />
+          {isStaff && (
+            <Button title="매장 체험 관리" full variant="secondary" onPress={() => navigate('experience-management')} />
+          )}
         </View>
 
         <View style={styles.topDivider} />
@@ -96,11 +98,7 @@ export default function Home({ navigate }) {
                     style={styles.historyItem}
                     onPress={() => {
                       global.currentSessionId = item.id;
-                      if (isViewable(item.status)) {
-                        navigate('ai-results', { sessionId: item.id });
-                      } else {
-                        Alert.alert('알림', '상대방이 아직 취향 정보를 입력하지 않았어요.\n초대 링크를 공유해보세요.');
-                      }
+                      navigate('gift-session-detail', { sessionId: item.id });
                     }}
                   >
                     <View style={styles.historyTopRow}>

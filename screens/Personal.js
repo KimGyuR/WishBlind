@@ -130,12 +130,14 @@ export default function Personal({ navigate }) {
             await authLogout();
             clearTokens();
             global.userId = null;
+            global.userEmail = null;
             global.giftData = null;
             navigate('login');
           } catch (err) {
             console.error('Logout error:', err);
             clearTokens();
             global.userId = null;
+            global.userEmail = null;
             global.giftData = null;
             navigate('login');
           }

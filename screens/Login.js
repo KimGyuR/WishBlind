@@ -27,6 +27,7 @@ export default function Login({ navigate }) {
         const { accessToken, refreshToken } = response.data;
         setTokens(accessToken, refreshToken);
         global.userId = decodeUserIdFromToken(accessToken);
+        global.userEmail = id.trim();
         navigate('home');
       } else {
         setError(response.message || '로그인에 실패했습니다');

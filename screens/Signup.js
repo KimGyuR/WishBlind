@@ -70,6 +70,7 @@ export default function Signup({ navigate }) {
         const { accessToken, refreshToken } = response.data;
         setTokens(accessToken, refreshToken);
         global.userId = decodeUserIdFromToken(accessToken);
+        global.userEmail = email.trim();
         Alert.alert('성공', '회원가입이 완료되었습니다', [
           { text: '확인', onPress: () => navigate('home') }
         ]);

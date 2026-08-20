@@ -42,6 +42,7 @@ import TasteTest3 from './screens/TasteTest3';
 import TasteTest4 from './screens/TasteTest4';
 import TasteTest5 from './screens/TasteTest5';
 import TasteComplete from './screens/TasteComplete';
+import GiftSessionDetail from './screens/GiftSessionDetail';
 import AIResults from './screens/AIResults';
 import AIDetail from './screens/AIDetail';
 import GiftDelivery from './screens/GiftDelivery';
@@ -83,6 +84,7 @@ export default function App() {
     'gift-step3': <GiftStep3 navigate={nav} />,
     'gift-step4': <GiftStep4 navigate={nav} />,
     'invite-confirm': <InviteConfirm navigate={nav} />,
+    'gift-session-detail': <GiftSessionDetail navigate={nav} route={{ params: global.routeParams?.['gift-session-detail'] }} />,
     'taste-1': <TasteTest1 navigate={nav} />,
     'taste-2': <TasteTest2 navigate={nav} />,
     'taste-3': <TasteTest3 navigate={nav} />,
