@@ -12,6 +12,7 @@
       "supportsTablet": false
     },
     "android": {
+      "package": "com.wishblind.app",
       "adaptiveIcon": {
         "backgroundColor": "#F8F4EE"
       }
@@ -21,6 +22,12 @@
     },
     "plugins": [
       "expo-asset"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c19c98ff-88b4-44a1-9ba7-96ee6fd8a906"
+      }
+    },
+    "owner": "kimminseo19373"
   }
 }
