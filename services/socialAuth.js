@@ -1,6 +1,6 @@
 import { Linking } from 'react-native';
 
-const BASE_URL = 'https://wishblind-backend-production.up.railway.app';
+const BASE_URL = 'https://wishblind-backend-production-2111.up.railway.app';
 
 // 테스트용 클라이언트 IDs (실제 환경에서는 .env에서 가져오기)
 const GOOGLE_CLIENT_ID = '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com'; // 테스트용

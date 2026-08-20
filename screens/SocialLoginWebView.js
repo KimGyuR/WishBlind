@@ -5,7 +5,7 @@ import { FakeStatusBar } from '../components/Shared';
 import { colors } from '../theme';
 import { setTokens, decodeUserIdFromToken } from '../services/api';
 
-const BASE_URL = 'https://wishblind-backend-production.up.railway.app';
+const BASE_URL = 'https://wishblind-backend-production-2111.up.railway.app';
 
 // 테스트용 클라이언트 IDs
 const GOOGLE_CLIENT_ID = '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com';

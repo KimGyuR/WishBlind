@@ -1,4 +1,4 @@
-const BASE_URL = 'https://wishblind-backend-production.up.railway.app';
+const BASE_URL = 'https://wishblind-backend-production-2111.up.railway.app';
 
 let accessToken = null;
 let refreshToken = null;
